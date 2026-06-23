@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from extensions import db
 from models import *
+from auth import auth, oauth
 
 load_dotenv()
 
@@ -14,8 +15,13 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 def index():
     return "KGV AV Booking System — coming soon"
 
-db.init_app(app)
+@app.route('/reject')
+def reject():
+    return "You do not have access to KGV's sytem >:("
 
+db.init_app(app)
+oauth.init_app(app)
+app.register_blueprint(auth)
 
 
 if __name__ == "__main__":

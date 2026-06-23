@@ -1,0 +1,6 @@
+flask
+flask-sqlalchemy
+pymysql
+python-dotenv
+authlib
+httpx
