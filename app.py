@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template, session
 from dotenv import load_dotenv
 import os
 from extensions import db
@@ -13,7 +13,21 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 @app.route('/')
 def index():
-    return "KGV AV Booking System — coming soon"
+    user_id = session.get('user_id')
+    if user_id is None:
+        return render_template("index.html")
+    user = User.query.get(user_id)
+    if user is None:
+        session.clear()
+        return render_template("index.html")
+    if user.role == UserRole.STUDENT:
+        return render_template("student_home.html")
+    elif user.role == UserRole.TEACHER:
+        return render_template("teacher_home.html")
+    elif user.role == UserRole.ADMIN:
+        return render_template("admin_home.html")
+
+  
 
 @app.route('/reject')
 def reject():
