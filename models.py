@@ -166,8 +166,11 @@ class StudioBooking(db.Model):
     fk_studio_space_id = db.Column(ForeignKey("studio_space.id"), nullable=False)
     studio_space = db.relationship('StudioSpace')
 
+    setup_selections = db.relationship('StudioBookingSetupSelection', back_populates='studio_booking')
+
+
     def __repr__(self):
-            return f'<StudioBooking {self.id} {self.fk_user_id}>'
+            return f'<StudioBooking {self.studio_booking_date} {self.studio_space}>'
     
 
 
@@ -179,7 +182,7 @@ class StudioBookingSetupSelection(db.Model):
     studio_setup_options = db.relationship('StudioSetupOptions')
 
     fk_studio_booking_id = db.Column(ForeignKey("studio_booking.id"), nullable=False)
-    studio_booking = db.relationship('StudioBooking')
+    studio_booking = db.relationship('StudioBooking', back_populates='setup_selections')
 
     def __repr__(self):
         return f'<StudioBookingSetupSelection {self.id} {self.fk_studio_booking_id}>'

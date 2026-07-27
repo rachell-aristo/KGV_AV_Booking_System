@@ -1,0 +1,97 @@
+from app import app
+from extensions import db
+from models import StudioSetupOptions, StudioSpace, TimeSlot
+from datetime import time
+from sqlalchemy import select
+
+
+
+with app.app_context():
+    if db.session.execute(select(StudioSpace)).first() is None:
+        photography = StudioSpace(name="Photography Studio")
+        audio = StudioSpace(name="Audio Booth")
+        db.session.add_all([photography,audio])
+        db.session.commit() 
+
+    photography = db.session.execute(select(StudioSpace).where(StudioSpace.name == "Photography Studio")).scalar()
+    audio = db.session.execute(select(StudioSpace).where(StudioSpace.name == "Audio Booth")).scalar()
+
+
+    p1 = TimeSlot(
+        name = "Period 1",
+        time_start = time(8,15),
+        time_end = time(9,15)
+    )
+
+    p2 = TimeSlot(
+        name = "Period 2",
+        time_start = time(9,25),
+        time_end = time(10,25)
+    )
+
+    break_time = TimeSlot(
+        name = "Break time",
+        time_start = time(10,55),
+        time_end = time(11,15)
+    )
+
+    p3 = TimeSlot(
+        name = "Period 3",
+        time_start = time(11,15),
+        time_end = time(12,15)
+    )
+
+    p4 = TimeSlot(
+        name = "Period 4",
+        time_start = time(12,25),
+        time_end = time(13,25)
+    )
+
+    lunch = TimeSlot(
+        name = "Lunch",
+        time_start = time(13,25),
+        time_end = time(14,20)
+    )
+
+    p5 = TimeSlot(
+        name = "Period 5",
+        time_start = time(14,20),
+        time_end = time(15,20)
+    )
+ 
+    if db.session.execute(select(TimeSlot)).scalars().first() is None:
+        db.session.add_all([p1,p2,p3,p4,p5,lunch,break_time])
+        db.session.commit()  
+
+    green_screen = StudioSetupOptions(
+        name = "Green Screen",
+        fk_studio_space_id = photography.id
+        )
+    black_bg = StudioSetupOptions(
+        name = "Black Background",
+        fk_studio_space_id = photography.id
+        )
+    
+    white_bg = StudioSetupOptions(
+        name = "White Background",
+        fk_studio_space_id = photography.id
+        )
+    
+    voice = StudioSetupOptions(
+        name = "Voice Recording",
+        fk_studio_space_id = audio.id
+        )
+    
+    foley = StudioSetupOptions(
+        name = "Foley Recording",
+        fk_studio_space_id = audio.id
+        )
+    
+    if db.session.execute(select(StudioSetupOptions)).scalars().first() is None:
+        db.session.add_all([green_screen,black_bg,white_bg,voice,foley])
+        db.session.commit()       
+        
+    print("Studio seed data inputed!")
+
+    
+    

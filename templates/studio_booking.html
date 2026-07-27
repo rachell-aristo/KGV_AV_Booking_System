@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Studio Booking{% endblock %}
+{% block content %}
+   <h1>Book a studio</h1>
+ 
+   {% for message in get_flashed_messages() %}
+    <p class="flash">{{ message }}</p>
+   {% endfor %}
+ 
+   <p id="error-message"></p>
+ 
+   <form action ="/submit_studio_booking" method = "POST">
+      <label>Choose a studio space:</label>
+      <select id="studio-select" name = "studio-space" required>
+         <option value="">Please select a studio space</option>
+         {% for i in studio_spaces %}
+         <option value = "{{i.id}}">{{i.name}}</option>
+         {% endfor %}
+      </select>
+ 
+      <label>Choose studio setup options:</label>
+      <select id="setup-select" disabled name="setup-select" required>
+         <option value="">Please select a studio first</option>
+         {% for i in setup_options%}
+         <option value = "{{i.id}}" data-studio="{{i.fk_studio_space_id}}">{{i.name}}</option>
+         {% endfor %}
+      </select>
+ 
+      <label>Select date:</label>
+         <input type = "date" id="booking-date" min="" name = "booking-date" required>
+ 
+      <label>Choose timeslot:</label>
+         <select id="timeslot-select" name = "timeslot" disabled required>
+            <option value="">Please select a date first</option>
+            {% for i in time_slots%}
+            <option value = "{{i.id}}" data-slotid = "{{i.fk_slot_id}}">{{i.name}}</option>
+            {% endfor %}
+         </select>
+ 
+      <label for="fname">Booking reason:</label>
+         <textarea id="booking-reason" name="booking-reason" rows="4" cols="50" required></textarea>
+ 
+      <label for="fname">Extra notes/questions:</label>
+         <textarea id="booking-notes" name="booking-notes" rows="4" cols="50"></textarea>
+ 
+      <div class="checkbox-row">
+         <input type="checkbox" id="loan-policy-1" name="loan-policy-1" required>
+         <label for="loan-policy-1">I confirm that I will inspect the equipment before checkout and will be held accountable for its condition and functionality when it is returned.</label>
+      </div>
+      <div class="checkbox-row">
+         <input type="checkbox" id="loan-policy-2" name="loan-policy-2" required>
+         <label for="loan-policy-2">I understand that I am responsible for the care and timely return of the booked equipment.</label>
+      </div>
+ 
+      <input type="submit" value="Submit">
+   </form>
+
+   <script>
+   const fullyBookedDays = JSON.parse('{{ fully_booked_days | tojson | safe }}');
+   const fp = flatpickr("#booking-date", {
+      minDate: "today",
+      allowInput:true,
+      disable: [
+         function(date) {
+            return date.getDay() === 0 || date.getDay() === 6;
+         }
+      ],  altInput: true, altFormat: "F j, Y", dateFormat: "Y-m-d",
+   });
+   let selectedStudioId = "";
+   let bookingdate = "";
+   let options = "";
+   function fetchBookedSlots() {
+      options = document.querySelectorAll('#timeslot-select option');
+      fetch(`/booked_slots?date=${bookingdate}&studio=${selectedStudioId}`)
+      .then(response => response.json())
+      .then(data => {
+         options.forEach(function(option) {
+            if (data.includes(parseInt(option.value))) {
+               option.disabled = true;
+            } else {
+               option.disabled = false;
+            }
+         });
+         document.getElementById('timeslot-select').selectedIndex = 0;
+         });
+    }
+   document.getElementById('studio-select').addEventListener('change', function() {
+      let setupOptions = document.querySelectorAll('#setup-select option');
+      selectedStudioId = this.value;
+      document.getElementById('setup-select').disabled = false;
+      document.getElementById('setup-select').selectedIndex = 0;
+      setupOptions.forEach(function(option) {
+         if (option.dataset.studio === selectedStudioId) {
+            option.style.display = 'block';
+         } else {
+            option.style.display = 'none';
+         }
+   });
+      fetchBookedSlots()
+      console.log(fullyBookedDays[selectedStudioId]);
+      fp.set("disable", [function(date) {
+         return date.getDay() === 0 || date.getDay() === 6;
+         allowInput:true;
+      }, ...(fullyBookedDays[selectedStudioId]|| [])]);
+      console.log("bookingdate:", bookingdate);
+      console.log("fullyBookedDays[selectedStudioId]:", fullyBookedDays[selectedStudioId]);
+      if ((fullyBookedDays[selectedStudioId]|| []).includes(bookingdate)){
+         fp.clear();
+         console.log("cleared")
+         document.getElementById('timeslot-select').selectedIndex = 0;
+      }
+   });
+   document.getElementById('booking-date').addEventListener('change', function() {
+      bookingdate = this.value;
+      options = document.querySelectorAll('#timeslot-select option');
+      document.getElementById('timeslot-select').disabled = false;
+      document.getElementById('timeslot-select').selectedIndex = 0;
+      fetchBookedSlots()
+   });
+
+   document.querySelector('form').addEventListener('submit', function(event) {
+    if (!document.getElementById("setup-select").value){
+      event.preventDefault();  // stops the form from submitting
+      document.getElementById('error-message').textContent = "Please select a setup option.";
+    }
+    if (!document.getElementById("timeslot-select").value){
+      event.preventDefault();  // stops the form from submitting
+      document.getElementById('error-message').textContent = "Please select a timeslot.";
+    }
+     
+    });
+   </script>
+{% endblock %}

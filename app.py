@@ -4,7 +4,8 @@ import os
 from extensions import db
 from models import *
 from auth import auth, oauth
-
+from studio_booking import studio_booking
+from student_home import student_home
 load_dotenv()
 
 app = Flask(__name__)
@@ -16,7 +17,7 @@ def index():
     user_id = session.get('user_id')
     if user_id is None:
         return render_template("index.html")
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if user is None:
         session.clear()
         return render_template("index.html")
@@ -36,6 +37,11 @@ def reject():
 db.init_app(app)
 oauth.init_app(app)
 app.register_blueprint(auth)
+app.register_blueprint(studio_booking)
+app.register_blueprint(student_home)
+
+
+
 
 
 if __name__ == "__main__":

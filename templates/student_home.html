@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Student Home{% endblock %}
+{% block content %}
+<h1>Current bookings</h1>
+
+<div class="booking-list">
+    {% for i in current_bookings %}
+    <div class="booking-card">
+        <span class="booking-title">{{i.studio_space.name}} &middot; {{i.studio_booking_date}} &middot; {{i.slot.name}}</span>
+        <span class="status status-{{i.studio_booking_status.value}}">{{i.studio_booking_status.value}}</span>
+        <span class="booking-meta">
+            ID: {{i.id}} &middot; Setup:
+            {% for selection in i.setup_selections %}
+                {{ selection.studio_setup_options.name }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </span>
+        <span class="booking-meta">Reason: {{i.student_studio_booking_reason}}</span>
+    </div>
+    {% else %}
+    <p class="empty-state">No current bookings.</p>
+    {% endfor %}
+</div>
+
+<h2>Past bookings</h2>
+
+<div class="booking-list">
+    {% for i in past_bookings %}
+    <div class="booking-card">
+        <span class="booking-title">{{i.studio_space.name}} &middot; {{i.studio_booking_date}} &middot; {{i.slot.name}}</span>
+        <span class="status status-{{i.studio_booking_status.value}}">{{i.studio_booking_status.value}}</span>
+        <span class="booking-meta">ID: {{i.id}} &middot; Setup: {{i.setup_selections.name}}</span>
+        <span class="booking-meta">Reason: {{i.student_studio_booking_reason}}</span>
+    </div>
+    {% else %}
+    <p class="empty-state">No past bookings.</p>
+    {% endfor %}
+</div>
+{% endblock %}

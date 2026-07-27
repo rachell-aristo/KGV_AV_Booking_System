@@ -1,9 +1,11 @@
 from app import app
 from extensions import db
 from models import User, UserRole
+from sqlalchemy import select
+
 
 with app.app_context():
-    if User.query.filter_by(email="leer17@kgv.hk").first() is None:
+    if db.session.execute(select(User).where(User.email == "leer17@kgv.hk")).scalar() is None:
         admin = User(
             google_sub_id="placeholder",
             name="Rachell Admin",
@@ -13,4 +15,6 @@ with app.app_context():
         db.session.add(admin)
         db.session.commit()
         print("Admin created!")
+
+    
     

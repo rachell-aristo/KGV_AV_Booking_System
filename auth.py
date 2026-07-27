@@ -2,6 +2,8 @@ from flask import Blueprint, redirect, url_for, session
 from authlib.integrations.flask_client import OAuth
 from extensions import db
 from models import User, UserRole
+from functools import wraps
+from sqlalchemy import select
 import os
 
 auth = Blueprint('auth', __name__)
@@ -18,6 +20,13 @@ google = oauth.register(
     client_kwargs={'scope': 'openid email profile'}
 )
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('user_id') is None:
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @auth.route('/login')
 def login():
@@ -27,7 +36,7 @@ def login():
 def callback():
     token = oauth.google.authorize_access_token()
     user_info = token['userinfo']
-    user = User.query.filter_by(google_sub_id=user_info['sub']).first()
+    user = db.session.execute(select(User).where(User.google_sub_id == user_info['sub'])).scalar()
     if user_info['email'][user_info['email'].find('@')+1:] != "kgv.hk":
         return redirect(url_for('reject')) 
     if  user is None:
