@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Equipment Booking{% endblock %}
+{% block content %}
+   <h1>Book equipment</h1>
+ 
+   {% for message in get_flashed_messages() %}
+    <p class="flash">{{ message }}</p>
+   {% endfor %}
+ 
+   <p id="error-message"></p>
+ 
+   <form action ="/submit_equipment_booking" method = "POST">
+      
+ 
+      <input type="submit" value="Submit">
+   </form>
+
+   <script>
+
+   </script>
+{% endblock %}

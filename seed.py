@@ -1,3 +1,5 @@
+#This file sets up Rachell's email as admin if it doesn't exit
+
 from app import app
 from extensions import db
 from models import User, UserRole

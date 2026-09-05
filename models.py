@@ -23,7 +23,6 @@ class LoanStatus(str, enum.Enum):
     REJECTED = "rejected"
     FINISHED = "finished"
 
-
 class PickUpTime(str, enum.Enum):
     BEFORE = "before" #before school
     BREAK = "break"

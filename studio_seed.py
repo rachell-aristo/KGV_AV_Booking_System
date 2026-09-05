@@ -1,3 +1,5 @@
+#seed code to set TimeSlot and SetUp for studio booking if not already there
+
 from app import app
 from extensions import db
 from models import StudioSetupOptions, StudioSpace, TimeSlot

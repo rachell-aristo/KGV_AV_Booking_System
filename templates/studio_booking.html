@@ -6,20 +6,24 @@
    {% for message in get_flashed_messages() %}
     <p class="flash">{{ message }}</p>
    {% endfor %}
+   <!-- For error messages from Python if not all fields are filled when submitting -->
  
    <p id="error-message"></p>
  
    <form action ="/submit_studio_booking" method = "POST">
       <label>Choose a studio space:</label>
       <select id="studio-select" name = "studio-space" required>
+         <!-- Id is for styling, name is for server identification -->
          <option value="">Please select a studio space</option>
          {% for i in studio_spaces %}
-         <option value = "{{i.id}}">{{i.name}}</option>
+         <option value = "{{i.id}}">{{i.name}}</option> 
+         <!-- Value defines what is sent to server when submitted if this option is clicked -->
          {% endfor %}
       </select>
  
       <label>Choose studio setup options:</label>
       <select id="setup-select" disabled name="setup-select" required>
+         <!-- Studio setup is disabled at first cuz you have to select studio first -->
          <option value="">Please select a studio first</option>
          {% for i in setup_options%}
          <option value = "{{i.id}}" data-studio="{{i.fk_studio_space_id}}">{{i.name}}</option>
@@ -37,10 +41,11 @@
             {% endfor %}
          </select>
  
-      <label for="fname">Booking reason:</label>
+      <label for="booking-reason">Booking reason:</label>
          <textarea id="booking-reason" name="booking-reason" rows="4" cols="50" required></textarea>
+         <!-- I chose to use text area since it allows styling of input box size unlike input tag -->
  
-      <label for="fname">Extra notes/questions:</label>
+      <label for="booking-notes">Extra notes/questions:</label>
          <textarea id="booking-notes" name="booking-notes" rows="4" cols="50"></textarea>
  
       <div class="checkbox-row">
@@ -51,12 +56,12 @@
          <input type="checkbox" id="loan-policy-2" name="loan-policy-2" required>
          <label for="loan-policy-2">I understand that I am responsible for the care and timely return of the booked equipment.</label>
       </div>
- 
       <input type="submit" value="Submit">
    </form>
 
    <script>
    const fullyBookedDays = JSON.parse('{{ fully_booked_days | tojson | safe }}');
+   // Parses the python array into format JS understands. Safe = trust this line of code
    const fp = flatpickr("#booking-date", {
       minDate: "today",
       allowInput:true,
@@ -65,61 +70,61 @@
             return date.getDay() === 0 || date.getDay() === 6;
          }
       ],  altInput: true, altFormat: "F j, Y", dateFormat: "Y-m-d",
+      // how this works is if function returns true, date gets disabled. So it goes through dates dynamically, not pre determined all at once
    });
    let selectedStudioId = "";
    let bookingdate = "";
    let options = "";
    function fetchBookedSlots() {
-      options = document.querySelectorAll('#timeslot-select option');
+      options = document.querySelectorAll('#timeslot-select option'); //selects all option elements that are children of this id
       fetch(`/booked_slots?date=${bookingdate}&studio=${selectedStudioId}`)
-      .then(response => response.json())
-      .then(data => {
-         options.forEach(function(option) {
-            if (data.includes(parseInt(option.value))) {
+      // asynchronus fetch, sends data request to server 
+      .then(response => response.json()) //take raw HTML data and JSONify
+      .then(data => { //now that data is called 'data' and parsed into this function
+         options.forEach(function(option) { //for loop that runs this function for each timeslot option element
+            if (data.includes(parseInt(option.value))) { //if any of timeslot options are in booked slots, disable it
                option.disabled = true;
             } else {
                option.disabled = false;
             }
          });
-         document.getElementById('timeslot-select').selectedIndex = 0;
+         document.getElementById('timeslot-select').selectedIndex = 0; 
+         //automatically resets selected time slot to first placeholder value
          });
     }
-   document.getElementById('studio-select').addEventListener('change', function() {
+   document.getElementById('studio-select').addEventListener('change', function() { //When the studio-select changes, run this:
       let setupOptions = document.querySelectorAll('#setup-select option');
-      selectedStudioId = this.value;
-      document.getElementById('setup-select').disabled = false;
-      document.getElementById('setup-select').selectedIndex = 0;
+      selectedStudioId = this.value; //'this' refers to #setup-select option
+      document.getElementById('setup-select').disabled = false; //enables setup options after studio is picked
+      document.getElementById('setup-select').selectedIndex = 0; //resets setup option to placeholder (in case studio was changed, not first time selected)
       setupOptions.forEach(function(option) {
-         if (option.dataset.studio === selectedStudioId) {
-            option.style.display = 'block';
+         if (option.dataset.studio === selectedStudioId) { 
+            //if in the setup options, the option is applicable to the selectedStudio (by checking if the value of data-studio matches the currently selected studio_id) 
+            option.style.display = 'block'; //display the optioj
          } else {
-            option.style.display = 'none';
+            option.style.display = 'none'; //otherwise hide it
          }
    });
-      fetchBookedSlots()
-      console.log(fullyBookedDays[selectedStudioId]);
-      fp.set("disable", [function(date) {
+      fetchBookedSlots() //rechecks if timeslot options need to be updated since studio changed
+      fp.set("disable", [function(date) { 
          return date.getDay() === 0 || date.getDay() === 6;
          allowInput:true;
-      }, ...(fullyBookedDays[selectedStudioId]|| [])]);
-      console.log("bookingdate:", bookingdate);
-      console.log("fullyBookedDays[selectedStudioId]:", fullyBookedDays[selectedStudioId]);
-      if ((fullyBookedDays[selectedStudioId]|| []).includes(bookingdate)){
+      }, ...(fullyBookedDays[selectedStudioId]|| [])]); //disables days on calendar where the studio is fully booked
+      if ((fullyBookedDays[selectedStudioId]|| []).includes(bookingdate)){ //if the currently selected booking date is in fully booked days array, clear date selection
          fp.clear();
-         console.log("cleared")
-         document.getElementById('timeslot-select').selectedIndex = 0;
+         document.getElementById('timeslot-select').selectedIndex = 0; //go back to placeholder timeslot option
       }
    });
-   document.getElementById('booking-date').addEventListener('change', function() {
-      bookingdate = this.value;
-      options = document.querySelectorAll('#timeslot-select option');
-      document.getElementById('timeslot-select').disabled = false;
-      document.getElementById('timeslot-select').selectedIndex = 0;
-      fetchBookedSlots()
+   document.getElementById('booking-date').addEventListener('change', function() { //when booking date is changed:
+      bookingdate = this.value; //set var to new bookingdate value
+      options = document.querySelectorAll('#timeslot-select option'); 
+      document.getElementById('timeslot-select').disabled = false; //show all timeslots
+      document.getElementById('timeslot-select').selectedIndex = 0; //set current time slots to placeholder
+      fetchBookedSlots() //removes timeslots which are full
    });
 
-   document.querySelector('form').addEventListener('submit', function(event) {
-    if (!document.getElementById("setup-select").value){
+   document.querySelector('form').addEventListener('submit', function(event) { //when form is submitted
+    if (!document.getElementById("setup-select").value){ //if setup has no value
       event.preventDefault();  // stops the form from submitting
       document.getElementById('error-message').textContent = "Please select a setup option.";
     }
@@ -127,6 +132,7 @@
       event.preventDefault();  // stops the form from submitting
       document.getElementById('error-message').textContent = "Please select a timeslot.";
     }
+    //The reason we need these js validation checks is because it's possible for user to select the placeholder option
      
     });
    </script>

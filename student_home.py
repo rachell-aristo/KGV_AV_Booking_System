@@ -4,7 +4,7 @@ from models import StudioSetupOptions, StudioSpace, TimeSlot, StudioBooking,Stud
 from auth import login_required
 from sqlalchemy import select
 
-student_home = Blueprint('student_home', __name__)
+student_home = Blueprint('student_home', __name__) #creates flask blueprint student_home
 
 @student_home.route('/student_home')
 @login_required
@@ -12,8 +12,9 @@ def fetch_date():
     user_id = session.get('user_id')
     current_bookings = []
     past_bookings = []
-    studio_bookings = db.session.execute(select(StudioBooking).where(StudioBooking.fk_user_id == user_id)).scalars().all()
-    for i in studio_bookings:
+    studio_bookings = db.session.execute(select(StudioBooking).where(StudioBooking.fk_user_id == user_id)).scalars().all() 
+    #selects all bookings this student had made
+    for i in studio_bookings: #for loops to categorize bookings into current and past ones
         if i.studio_booking_status == (StudioBookingStatus.PENDING) or i.studio_booking_status == (StudioBookingStatus.CONFIRMED):
             current_bookings.append(i)
         elif i.studio_booking_status == (StudioBookingStatus.FINISHED) or i.studio_booking_status == (StudioBookingStatus.REJECTED):
@@ -21,3 +22,4 @@ def fetch_date():
     for i in studio_bookings:
         print(i.id, i.setup_selections)
     return render_template("student_home.html", current_bookings = current_bookings, past_bookings = past_bookings)
+#render the html page and pass values into it that html page will show with jinga
