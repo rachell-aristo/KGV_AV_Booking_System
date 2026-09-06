@@ -8,10 +8,11 @@ from sqlalchemy import select
 
 
 
+
 with app.app_context():
     if db.session.execute(select(StudioSpace)).first() is None:
-        photography = StudioSpace(name="Photography Studio")
-        audio = StudioSpace(name="Audio Booth")
+        photography = StudioSpace(name="Photography Studio", descript = "Media studio for photography and more", image = "uploads/temp_studio_image.png")
+        audio = StudioSpace(name="Audio Booth", descript = "Audio booth for voice recording and foley", image = "uploads/temp_sound_image.jpg")
         db.session.add_all([photography,audio])
         db.session.commit() 
 

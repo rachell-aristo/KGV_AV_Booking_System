@@ -63,6 +63,8 @@ class StudioSpace(db.Model):
     __tablename__ = 'studio_space'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable = False)
+    descript = db.Column(db.String(500), nullable = True)
+    image = db.Column(db.String(1000), nullable = False)
 
     def __repr__(self):
         return f'<StudioSpace {self.id} {self.name}>'
