@@ -1,9 +1,10 @@
-from flask import Flask, render_template, session
+from flask import Flask, render_template, session, redirect, url_for
+from flask_login import current_user
 from dotenv import load_dotenv
 import os
 from extensions import db
 from models import *
-from auth import auth, oauth #these lines loads blueprints so they can be registered
+from auth import auth, oauth, login_manager #these lines loads blueprints so they can be registered
 from studio_booking import studio_booking
 from student_home import student_home
 load_dotenv() #loads values from .env file into here so can access
@@ -15,21 +16,14 @@ app.config["SESSION_PERMANENT"] = False #Sessions expire when the browser is clo
 
 @app.route('/') #what happens on index main page
 def index():
-    user_id = session.get('user_id') 
-    if user_id is None: #if not logged in
+    if not current_user.is_authenticated: #if not logged in
         return render_template("index.html")
-    user = db.session.get(User, user_id)
-    if user is None: #if user doesn't exist
-        session.clear()
-        return render_template("index.html")
-    if user.role == UserRole.STUDENT:
-        return render_template("student_home.html")
-    elif user.role == UserRole.TEACHER:
-        return render_template("teacher_home.html")
-    elif user.role == UserRole.ADMIN:
+    if current_user.role == UserRole.STUDENT:
+        return redirect(url_for('student_home.fetch_date'))
+    elif current_user.role == UserRole.TEACHER:
+        return redirect(url_for('teacher_home'))
+    elif current_user.role == UserRole.ADMIN:
         return render_template("admin_home.html")
-
-  
 
 @app.route('/reject') 
 def reject():
@@ -39,6 +33,7 @@ db.init_app(app) #connects SQL database with Flask app
 oauth.init_app(app) #connects the oauth extension to the app
 #blueprints = breaking up your code so it's modular. 
 #These lines register the blueprints so that it knows they exist
+login_manager.init_app(app) #connects flask-login with app
 app.register_blueprint(auth) 
 app.register_blueprint(studio_booking)
 app.register_blueprint(student_home)

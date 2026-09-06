@@ -1,7 +1,8 @@
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
+from flask_login import current_user
 from extensions import db
 from models import StudioSetupOptions, StudioSpace, TimeSlot, StudioBooking,StudioBookingStatus,StudioBookingSetupSelection, User, UserRole
-from auth import login_required
+from flask_login import login_required
 from sqlalchemy import select
 
 studio_booking = Blueprint('studio_booking', __name__)
@@ -85,7 +86,7 @@ def submit_studio_booking():
             student_studio_booking_notes = student_studio_booking_notes,
             fk_slot_id = timeslot,
             fk_studio_space_id = studio_space,
-            fk_user_id=session.get('user_id')
+            fk_user_id=current_user.id
         )
     db.session.add(new_record)
     db.session.commit()

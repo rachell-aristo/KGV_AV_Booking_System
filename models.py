@@ -1,4 +1,5 @@
 from extensions import db
+from flask_login import UserMixin
 import enum
 from sqlalchemy import ForeignKey
 from sqlalchemy import Time
@@ -35,7 +36,7 @@ class StudioBookingStatus(str, enum.Enum):
     REJECTED = "rejected"
     FINISHED = "finished"
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     google_sub_id = db.Column(db.String(255), nullable = False)

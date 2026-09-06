@@ -12,7 +12,9 @@
       <header class="site-header">
          <a class="brand" href="/">KGV AV Booking</a>
          <nav>
-            <a href="/logout">Log out</a>
+            {% if current_user.is_authenticated %}
+               <a href="/logout">Log out</a>
+            {% endif %}
          </nav>
       </header>
       <main class="page">

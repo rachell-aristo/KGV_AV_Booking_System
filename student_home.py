@@ -1,7 +1,7 @@
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
 from extensions import db
 from models import StudioSetupOptions, StudioSpace, TimeSlot, StudioBooking,StudioBookingStatus,StudioBookingSetupSelection
-from auth import login_required
+from flask_login import login_required, current_user
 from sqlalchemy import select
 
 student_home = Blueprint('student_home', __name__) #creates flask blueprint student_home
@@ -9,7 +9,8 @@ student_home = Blueprint('student_home', __name__) #creates flask blueprint stud
 @student_home.route('/student_home')
 @login_required
 def fetch_date():
-    user_id = session.get('user_id')
+    user_id = current_user.id
+    print(user_id)
     current_bookings = []
     past_bookings = []
     studio_bookings = db.session.execute(select(StudioBooking).where(StudioBooking.fk_user_id == user_id)).scalars().all() 
