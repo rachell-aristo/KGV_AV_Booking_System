@@ -1,3 +1,5 @@
+#to do: incorperate this into the Admin space so that Arthur can upload too. Make sure to give him strict formatting rules
+
 import pandas as pd
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
 from flask_login import current_user
@@ -57,21 +59,24 @@ for row in records:
             equipment = db.session.execute(stmt).scalar_one_or_none()
             equipment.quantity += 1
             db.session.commit()
+        new_asset = Asset(
+            name = type,
+            barcode = barcode,
+            status = status,
+            descript = descript,
+            is_active = True,
+            fk_equipment_type_id = db.session.execute(select(EquipmentType.id).where(EquipmentType.name == type)).scalar(),
+            created = datetime.now()
+            )
+        db.session.add(new_asset)
+        print("New asset created!")
+        db.session.commit()
 
 
 with app.app_context():
     print(db.session.execute(select(EquipmentCategory)).scalars().all())
 
-# new_asset = Asset(
-#         name = type,
-#         barcode = barcode,
-#         status = status,
-#         descrip = descrip,
-#         is_active = True,
-#         fk_equipment_type_id = equipment_type,
-#     )
-# db.session.add(new_asset)
-# db.session.commit()
+
 
 
 # #the structure of what this should be is: you need to set each value/row to a record

@@ -107,6 +107,7 @@ class Asset(db.Model):
     name = db.Column(db.String(255), nullable = False)
     barcode = db.Column(db.String(255), nullable = False)
     status = db.Column(db.Enum(AssetStatus), nullable=False)
+    descript = db.Column(db.String(1000), nullable = True)
     is_active = db.Column(db.Boolean, nullable = False )
     fk_equipment_type_id = db.Column(ForeignKey("equipment_type.id"), nullable=False)
     equipment_type = db.relationship('EquipmentType')

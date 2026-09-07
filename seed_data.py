@@ -2,13 +2,10 @@
 
 from app import app
 from extensions import db
-from models import StudioSetupOptions, StudioSpace, TimeSlot
+from models import StudioSetupOptions, StudioSpace, TimeSlot, User, UserRole
 from datetime import time
 from sqlalchemy import select
 from datetime import datetime
-
-
-
 
 with app.app_context():
     if db.session.execute(select(StudioSpace)).first() is None:
@@ -106,9 +103,32 @@ with app.app_context():
     
     if db.session.execute(select(StudioSetupOptions)).scalars().first() is None:
         db.session.add_all([green_screen,black_bg,white_bg,voice,foley])
-        db.session.commit()       
+        db.session.commit()    
+        print("Studio seed data inputed!")
+   
         
-    print("Studio seed data inputed!")
+
+    #admin seed data
+    if db.session.execute(select(User).where(User.email == "leer17@kgv.hk")).scalar() is None:
+        admin = User(
+            google_sub_id="placeholder",
+            name="Rachell Admin",
+            email="leer17@kgv.hk",
+            role=UserRole.ADMIN,
+            created = datetime.now()
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print("Admin seed data inputed!")
+
+
+
+    
+
+
+
+
+    
 
     
     
