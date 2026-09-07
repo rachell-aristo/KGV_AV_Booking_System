@@ -16,16 +16,17 @@
       <label>Select date:</label>
             <input placeholder = "mm/dd/yy" type = "date" id="booking-date" min="" name = "booking-date" required>
    
-
-      {% for i in studio_spaces %}
-         <div class = "studio-card"  data-studio-id="{{ i.id }}"> 
-            <img src= "{{ url_for('static', filename=i.image) }}" style="width:30%">
-            <div class="container">
-               <h4><b>{{i.name}}</b></h4>
-               <p>{{i.descript}}</p>
+      <div class="cards-grid">
+         {% for i in studio_spaces %}
+            <div class = "studio-card"  data-studio-id="{{ i.id }}"> 
+               <img src= "{{ url_for('static', filename=i.image) }}" style="width:30%">
+               <div class="container">
+                  <h4><b>{{i.name}}</b></h4>
+                  <p>{{i.descript}}</p>
+               </div>
             </div>
-         </div>
-      {% endfor %}
+         {% endfor %}
+      </div>
       <input id="selected-studio-space" type="hidden" name="studio-space">
 
 

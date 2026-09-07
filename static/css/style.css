@@ -81,14 +81,15 @@ body {
 }
 
 .page {
-  max-width: 880px;
+  max-width: 100%; /* Expanded from 880px to utilize the full screen width */
+  width: 100%;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 2rem 2rem 4rem;
 }
 
 .page h1 {
   color: var(--purple-900);
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   margin: 0 0 1.25rem;
 }
 
@@ -107,6 +108,7 @@ body {
   box-shadow: var(--shadow);
   padding: 1.5rem;
   margin-bottom: 1rem;
+  width: 100%;
 }
 
 .booking-list {
@@ -141,6 +143,73 @@ body {
   padding: 0.75rem 0;
 }
 
+/* ------------------------- Selection Card Grids -------------------------- */
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin: 0.5rem 0 1.5rem;
+  width: 100%;
+}
+
+.equip-card,
+.studio-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.equip-card:hover,
+.studio-card:hover {
+  border-color: var(--purple-500);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.equip-card.selected,
+.studio-card.selected {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+  box-shadow: 0 0 0 3px var(--purple-100);
+}
+
+.equip-card img,
+.studio-card img {
+  width: 100% !important;
+  height: 160px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--border);
+}
+
+.equip-card .container,
+.studio-card .container {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.equip-card h4,
+.studio-card h4 {
+  margin: 0 0 0.35rem 0;
+  color: var(--purple-900);
+  font-size: 1rem;
+}
+
+.equip-card p,
+.studio-card p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
 /* ------------------------------- Status pill ----------------------------- */
 
 .status {
@@ -165,16 +234,17 @@ form {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 1.75rem;
-  max-width: 560px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 100%; /* Allows form container to stretch full screen width */
 }
 
 label {
   display: block;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--ink);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.4rem;
 }
 
 select,
@@ -184,12 +254,12 @@ textarea {
   width: 100%;
   font-family: var(--font);
   font-size: 0.95rem;
-  padding: 0.55rem 0.7rem;
+  padding: 0.65rem 0.8rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--purple-50);
   color: var(--ink);
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.25rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -209,7 +279,7 @@ select:disabled {
 
 textarea {
   resize: vertical;
-  min-height: 4.5rem;
+  min-height: 5rem;
 }
 
 /* checkboxes: keep native box, style the row */
@@ -245,7 +315,7 @@ button,
   font-size: 0.95rem;
   border: none;
   border-radius: var(--radius-sm);
-  padding: 0.65rem 1.4rem;
+  padding: 0.75rem 1.75rem;
   cursor: pointer;
   transition: background 0.15s ease;
   text-decoration: none;
@@ -324,4 +394,57 @@ button:hover,
 
 a {
   color: var(--purple-600);
+}
+
+/* ------------------------------- Tabs ----------------------------------- */
+
+.tab {
+  display: flex;
+  background-color: var(--purple-50);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  overflow: hidden;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.tab button.tablinks {
+  background-color: transparent;
+  color: var(--ink-soft);
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
+.tab button.tablinks:hover {
+  background-color: var(--purple-100);
+  color: var(--purple-900);
+}
+
+.tab button.tablinks.active {
+  background-color: var(--purple-600);
+  color: #ffffff;
+}
+
+.tabcontent {
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 1.25rem;
+  background-color: var(--surface);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+/* Adjust card margin inside tabs */
+.tabcontent .cards-grid {
+  margin: 0;
 }

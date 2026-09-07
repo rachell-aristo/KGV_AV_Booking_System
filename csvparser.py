@@ -79,4 +79,3 @@ with app.app_context():
 
 
 
-# #the structure of what this should be is: you need to set each value/row to a record
