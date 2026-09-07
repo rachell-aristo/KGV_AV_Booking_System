@@ -5,14 +5,16 @@ from extensions import db
 from models import StudioSetupOptions, StudioSpace, TimeSlot
 from datetime import time
 from sqlalchemy import select
+from datetime import datetime
 
 
 
 
 with app.app_context():
     if db.session.execute(select(StudioSpace)).first() is None:
-        photography = StudioSpace(name="Photography Studio", descript = "Media studio for photography and more", image = "uploads/temp_studio_image.png")
-        audio = StudioSpace(name="Audio Booth", descript = "Audio booth for voice recording and foley", image = "uploads/temp_sound_image.jpg")
+        photography = StudioSpace(name="Photography Studio", descript = "Media studio for photography and more", image = "uploads/temp_studio_image.png", created = datetime.now())
+        audio = StudioSpace(name="Audio Booth", descript = "Audio booth for voice recording and foley", image = "uploads/temp_sound_image.jpg", created = datetime.now())
+
         db.session.add_all([photography,audio])
         db.session.commit() 
 
@@ -23,43 +25,50 @@ with app.app_context():
     p1 = TimeSlot(
         name = "Period 1",
         time_start = time(8,15),
-        time_end = time(9,15)
+        time_end = time(9,15),
+        created = datetime.now()
     )
 
     p2 = TimeSlot(
         name = "Period 2",
         time_start = time(9,25),
-        time_end = time(10,25)
+        time_end = time(10,25),
+        created = datetime.now()
     )
 
     break_time = TimeSlot(
         name = "Break time",
         time_start = time(10,55),
-        time_end = time(11,15)
+        time_end = time(11,15),
+        created = datetime.now()
     )
 
     p3 = TimeSlot(
         name = "Period 3",
         time_start = time(11,15),
-        time_end = time(12,15)
+        time_end = time(12,15),
+        created = datetime.now()
     )
 
     p4 = TimeSlot(
         name = "Period 4",
         time_start = time(12,25),
-        time_end = time(13,25)
+        time_end = time(13,25),
+        created = datetime.now()
     )
 
     lunch = TimeSlot(
         name = "Lunch",
         time_start = time(13,25),
-        time_end = time(14,20)
+        time_end = time(14,20),
+        created = datetime.now()
     )
 
     p5 = TimeSlot(
         name = "Period 5",
         time_start = time(14,20),
-        time_end = time(15,20)
+        time_end = time(15,20),
+        created = datetime.now()
     )
  
     if db.session.execute(select(TimeSlot)).scalars().first() is None:
@@ -68,26 +77,31 @@ with app.app_context():
 
     green_screen = StudioSetupOptions(
         name = "Green Screen",
-        fk_studio_space_id = photography.id
+        fk_studio_space_id = photography.id,
+        created = datetime.now()
         )
     black_bg = StudioSetupOptions(
         name = "Black Background",
-        fk_studio_space_id = photography.id
+        fk_studio_space_id = photography.id,
+        created = datetime.now()
         )
     
     white_bg = StudioSetupOptions(
         name = "White Background",
-        fk_studio_space_id = photography.id
+        fk_studio_space_id = photography.id,
+        created = datetime.now()
         )
     
     voice = StudioSetupOptions(
         name = "Voice Recording",
-        fk_studio_space_id = audio.id
+        fk_studio_space_id = audio.id,
+        created = datetime.now()
         )
     
     foley = StudioSetupOptions(
         name = "Foley Recording",
-        fk_studio_space_id = audio.id
+        fk_studio_space_id = audio.id,
+        created = datetime.now()
         )
     
     if db.session.execute(select(StudioSetupOptions)).scalars().first() is None:

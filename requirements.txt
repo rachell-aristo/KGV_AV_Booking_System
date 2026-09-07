@@ -24,7 +24,9 @@ itsdangerous==2.2.0
 Jinja2==3.1.6
 joserfc==1.7.1
 MarkupSafe==3.0.3
+numpy==2.5.3
 oauthlib==3.3.1
+pandas==3.0.5
 proto-plus==1.28.0
 protobuf==7.35.1
 pyasn1==0.6.3
@@ -32,9 +34,11 @@ pyasn1_modules==0.4.2
 pycparser==3.0
 PyMySQL==1.2.0
 pyparsing==3.3.2
+python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 requests==2.34.2
 requests-oauthlib==2.0.0
+six==1.17.0
 SQLAlchemy==2.0.50
 typing_extensions==4.15.0
 uritemplate==4.2.0

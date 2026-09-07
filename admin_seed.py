@@ -4,6 +4,8 @@ from app import app
 from extensions import db
 from models import User, UserRole
 from sqlalchemy import select
+from datetime import datetime
+
 
 
 with app.app_context():
@@ -12,7 +14,8 @@ with app.app_context():
             google_sub_id="placeholder",
             name="Rachell Admin",
             email="leer17@kgv.hk",
-            role=UserRole.ADMIN
+            role=UserRole.ADMIN,
+            created = datetime.now()
         )
         db.session.add(admin)
         db.session.commit()

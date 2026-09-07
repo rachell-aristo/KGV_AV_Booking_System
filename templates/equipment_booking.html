@@ -6,16 +6,44 @@
    {% for message in get_flashed_messages() %}
     <p class="flash">{{ message }}</p>
    {% endfor %}
- 
    <p id="error-message"></p>
+   <!-- For error messages from Python if not all fields are filled when submitting -->
+
  
    <form action ="/submit_equipment_booking" method = "POST">
-      
+      <label>Select loan start date:</label>
+            <input placeholder = "mm/dd/yy" type = "date" id="loan-start-date" min="" name = "loan-start-date" required>
+
+      <label>Select loan end date:</label>
+            <input placeholder = "mm/dd/yy" type = "date" id="loan-end-date" min="" name = "loan-end-date" required>
+
+      {% for i in equipment_types %}
+         <div class = "equip-card"  data-equip-id="{{ i.id }}"> 
+            <img src= "{{ url_for('static', filename=i.image) }}" style="width:30%">
+            <div class="container">
+               <h4><b>{{i.name}}</b></h4>
+               <p>{{i.descript}}</p>
+            </div>
+         </div>
+      {% endfor %}
+      <input id="selected-studio-space" type="hidden" name="studio-space">
  
       <input type="submit" value="Submit">
    </form>
 
    <script>
+      const bookingDataEl = document.getElementById('booking-data');
+      const fullyBookedDays = JSON.parse(bookingDataEl.dataset.fullyBooked);  
 
+      const fp = flatpickr("#booking-date", {
+         minDate: "today",
+         allowInput:true,
+         disable: [
+            function(date) {
+               return date.getDay() === 0 || date.getDay() === 6;
+            }
+         ],  altInput: true, altFormat: "F j, Y", dateFormat: "Y-m-d",
+         // how this works is if function returns true, date gets disabled. So it goes through dates dynamically, not pre determined all at once
+      });
    </script>
 {% endblock %}

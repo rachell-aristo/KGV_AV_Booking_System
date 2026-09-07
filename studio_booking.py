@@ -4,6 +4,8 @@ from extensions import db
 from models import StudioSetupOptions, StudioSpace, TimeSlot, StudioBooking,StudioBookingStatus,StudioBookingSetupSelection, User, UserRole
 from flask_login import login_required
 from sqlalchemy import select
+from datetime import datetime
+
 
 studio_booking = Blueprint('studio_booking', __name__)
 
@@ -31,8 +33,6 @@ def data_fetch():
         if value >= len(time_slots): 
             # if the number of booked slots for that studio on that day is more or equal to # of timeslots, add to fully-booked
             fully_booked_days[key[1]].append(key[0].strftime("%Y-%m-%d")) #appends the formatted date of when studio is fully booked to fully_booked_days
-    print(fully_booked_days)
-    print(studio_spaces)
     return render_template("studio_booking.html", studio_spaces = studio_spaces,setup_options = setup_options, time_slots = time_slots, fully_booked_days = fully_booked_days)
 
 @studio_booking.route('/booked_slots')
@@ -64,6 +64,7 @@ def submit_studio_booking():
     timeslot = request.form.get('timeslot')
     studio_space = request.form.get('studio-space')
     fk_studio_setup_options_id = request.form.get('setup-select')
+    
 
     #if any data is missing when trying to submit, return error message which is inserted into HTML
     if not studio_booking_date:
@@ -78,7 +79,7 @@ def submit_studio_booking():
         return missing_input("Please input a booking reason.")
 
     #make new booking record
-    
+    print('LOOK:',fk_studio_setup_options_id)
     new_record = StudioBooking(
             studio_booking_date = studio_booking_date,
             studio_booking_status = StudioBookingStatus.PENDING,
@@ -86,23 +87,22 @@ def submit_studio_booking():
             student_studio_booking_notes = student_studio_booking_notes,
             fk_slot_id = timeslot,
             fk_studio_space_id = studio_space,
-            fk_user_id=current_user.id
+            fk_user_id=current_user.id,
+            created = datetime.now()
         )
     db.session.add(new_record)
     db.session.commit()
 
     setup = StudioBookingSetupSelection(
         fk_studio_setup_options_id = fk_studio_setup_options_id,
-        fk_studio_booking_id = new_record.id
+        fk_studio_booking_id = new_record.id,
+        created = datetime.now()
     )
     db.session.add(setup)
     db.session.commit()
-    return redirect(url_for('studio_booking.success_booking')) #redirect user to success booking page
+    return redirect(url_for('success_booking')) #redirect user to success booking page
 
-@studio_booking.route('/success_booking')
-@login_required
-def success_booking():
-    return render_template("success_booking.html")
+
 
 
 

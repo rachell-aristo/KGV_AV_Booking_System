@@ -1,5 +1,5 @@
 from flask import Flask, render_template, session, redirect, url_for
-from flask_login import current_user
+from flask_login import current_user, login_required
 from dotenv import load_dotenv
 import os
 from extensions import db
@@ -7,6 +7,7 @@ from models import *
 from auth import auth, oauth, login_manager #these lines loads blueprints so they can be registered
 from studio_booking import studio_booking
 from student_home import student_home
+from equipment_booking import equip_booking
 load_dotenv() #loads values from .env file into here so can access
 
 app = Flask(__name__) #Creates this file as a Flask application
@@ -29,6 +30,11 @@ def index():
 def reject():
     return "Access denied."
 
+@app.route('/success_booking')
+@login_required
+def success_booking():
+    return render_template("success_booking.html")
+
 db.init_app(app) #connects SQL database with Flask app
 oauth.init_app(app) #connects the oauth extension to the app
 #blueprints = breaking up your code so it's modular. 
@@ -37,6 +43,8 @@ login_manager.init_app(app) #connects flask-login with app
 app.register_blueprint(auth) 
 app.register_blueprint(studio_booking)
 app.register_blueprint(student_home)
+app.register_blueprint(equip_booking)
+
 
 
 

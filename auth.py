@@ -7,6 +7,8 @@ from models import User, UserRole
 from functools import wraps #decorator useful for creating decorator 
 from sqlalchemy import select
 import os
+from datetime import datetime
+
 
 auth = Blueprint('auth', __name__)
 oauth = OAuth()
@@ -22,7 +24,8 @@ google = oauth.register(
     client_id=os.getenv('GOOGLE_CLIENT_ID'),
     client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_kwargs={'scope': 'openid email profile'}
+    client_kwargs={'scope': 'openid email profile'},
+    created = datetime.now()
 )
 
 @login_manager.user_loader
@@ -68,7 +71,8 @@ def callback():
         user = User(
         google_sub_id=user_info['sub'],
         name=user_info['name'],
-        email=user_info['email']
+        email=user_info['email'],
+        created = datetime.now()
         )
     if user_info['name'].find('[') != -1: #extracts the user's year group from the name cuz KGV has this format
         user.year_group = int(user_info['name'][user_info['name'].find('[')+1:user_info['name'].find('[')+3])

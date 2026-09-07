@@ -13,9 +13,9 @@ class UserRole(str, enum.Enum):
     TEACHER = "teacher"
 
 class AssetStatus(str, enum.Enum):
-    AVALIABLE = "avaliable"
-    UNAVALIABLE = "unavaliable"
-    UPCOMING = "upcoming"
+    AVAILABLE = "available"
+    UNAVAILABLE = "unavailable"
+    UPCOMING = "upcoming" #there's an upcoming loan with it 
 
 class LoanStatus(str, enum.Enum):
     OVERDUE = "overdue"
@@ -44,6 +44,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.Enum(UserRole), nullable=False, default=UserRole.STUDENT)
     year_group = db.Column(db.Integer)
     email = db.Column(db.String(255), nullable = False)
+    created = db.Column(db.DateTime, nullable=False)
     __table_args__ = (
         db.CheckConstraint('year_group <= 13 AND year_group >= 7'),
     )
@@ -55,6 +56,7 @@ class EquipmentCategory(db.Model):
     __tablename__ = 'equipment_category'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable = False)
+    created = db.Column(db.DateTime, nullable=False)
     
     def __repr__(self):
         return f'<EquipmentCategory {self.id} {self.name}>'
@@ -65,6 +67,8 @@ class StudioSpace(db.Model):
     name = db.Column(db.String(255), nullable = False)
     descript = db.Column(db.String(500), nullable = True)
     image = db.Column(db.String(1000), nullable = False)
+    created = db.Column(db.DateTime, nullable=False)
+
 
     def __repr__(self):
         return f'<StudioSpace {self.id} {self.name}>'
@@ -75,6 +79,7 @@ class TimeSlot(db.Model):
     name = db.Column(db.String(255), nullable = False)
     time_start = db.Column(Time, nullable = False)
     time_end = db.Column(Time, nullable = False)
+    created = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
         return f'<TimeSlot {self.id} {self.name}>'
@@ -85,10 +90,13 @@ class EquipmentType(db.Model):
     name = db.Column(db.String(255), nullable = False)
     quantity = db.Column(db.Integer, nullable = False)
     max_loan_days = db.Column(db.Integer, default = DefaultLoanDays, nullable = False)
-    min_year_group = db.Column(db.Integer, nullable = False)
-    loan_limit_quantity = db.Column(db.Integer, nullable = False)
+    min_year_group = db.Column(db.Integer, default = 7, nullable = False)
+    loan_limit_quantity = db.Column(db.Integer, default = 5, nullable = False)
+    image = db.Column(db.String(1000), nullable = False)
+    descript = db.Column(db.String(500), nullable = True)
     fk_equipment_category_id = db.Column(ForeignKey("equipment_category.id"), nullable=False)
     equipment_category = db.relationship('EquipmentCategory')
+    created = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
             return f'<EquipmentType {self.id} {self.name}>'
@@ -102,6 +110,7 @@ class Asset(db.Model):
     is_active = db.Column(db.Boolean, nullable = False )
     fk_equipment_type_id = db.Column(ForeignKey("equipment_type.id"), nullable=False)
     equipment_type = db.relationship('EquipmentType')
+    created = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
             return f'<Asset {self.id} {self.name}>'
@@ -112,6 +121,7 @@ class StudioSetupOptions(db.Model):
     name = db.Column(db.String(255), nullable = False)
     fk_studio_space_id = db.Column(ForeignKey("studio_space.id"), nullable=False)
     studio_space = db.relationship('StudioSpace')
+    created = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
             return f'<StudioSetupOptions {self.id} {self.name}>'
@@ -129,6 +139,7 @@ class EquipmentLoan(db.Model):
     admin_reject_reason = db.Column(db.Text, nullable = True)
     fk_user_id = db.Column(ForeignKey("user.id"), nullable=False)
     user = db.relationship('User')
+    created = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
             return f'<EquipmentLoan {self.id} {self.fk_user_id}>'
@@ -145,6 +156,7 @@ class EquipmentLoanItem(db.Model):
 
     fk_loan_id = db.Column(ForeignKey("equipment_loan.id"), nullable=False)
     equipment_loan = db.relationship('EquipmentLoan')
+    created = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
             return f'<EquipmentLoanItem {self.id} {self.fk_loan_id}>'
@@ -169,6 +181,7 @@ class StudioBooking(db.Model):
     studio_space = db.relationship('StudioSpace')
 
     setup_selections = db.relationship('StudioBookingSetupSelection', back_populates='studio_booking')
+    created = db.Column(db.DateTime, nullable=False)
 
 
     def __repr__(self):
@@ -185,6 +198,7 @@ class StudioBookingSetupSelection(db.Model):
 
     fk_studio_booking_id = db.Column(ForeignKey("studio_booking.id"), nullable=False)
     studio_booking = db.relationship('StudioBooking', back_populates='setup_selections')
+    created = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
         return f'<StudioBookingSetupSelection {self.id} {self.fk_studio_booking_id}>'
@@ -195,12 +209,14 @@ class StudentClass(db.Model):
     name = db.Column(db.String(255), nullable = False)
     fk_teacher_id = db.Column(ForeignKey("user.id"), nullable=False)
     teacher = db.relationship('User')
+    created = db.Column(db.DateTime, nullable=False)
 
 class ClassEnrollment(db.Model):
     __tablename__ = 'class_enrollment'
     id = db.Column(db.Integer, primary_key=True)
     fk_class_id = db.Column(ForeignKey("student_class.id"), nullable=False)
     student_class = db.relationship('StudentClass')
+    created = db.Column(db.DateTime, nullable=False)
 
     fk_student_id = db.Column(ForeignKey("user.id"), nullable=False)
     student = db.relationship('User')
