@@ -24,8 +24,7 @@
             <button 
                class="tablinks {% if loop.first %}active{% endif %}"
                type = "button"
-               onclick="openCategory(event, 'cat-{{i.id}}')"> 
-               <!-- Ch -->
+               data-cat-id= "{{ i.id }}"> 
                {{i.name}}
             </button>
          {% endfor %}
@@ -33,7 +32,7 @@
 
       <!-- Tab content -->
        {% for cat in equipment_category %}
-         <div id="cat-{{ cat.id }}" class="tabcontent" {% if loop.first %}style="display: block;"{% else %}style="display: none;"{% endif %}>            <div class="cards-grid">
+         <div data-cat-id="{{ cat.id }}" class="tabcontent" {% if loop.first %}style="display: block;"{% else %}style="display: none;"{% endif %}>            <div class="cards-grid">
                {% for i in equipment_types %}
                   {% if i.fk_equipment_category_id | int == cat.id | int %}
                      <div class="equip-card" data-equip-id="{{ i.id }}"> 
@@ -69,27 +68,32 @@
          ],  altInput: true, altFormat: "F j, Y", dateFormat: "Y-m-d",
          // how this works is if function returns true, date gets disabled. So it goes through dates dynamically, not pre determined all at once
       });
-      
-      function openCategory(evt, category_id) {
-         // Prevent form submission trigger, cuz html buttons by default will act as submit buttons as type ="submit"
-         if (evt) evt.preventDefault();
 
-         // Hide all tab content
-         const tabcontent = document.getElementsByClassName("tabcontent");
-         for (let i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-         }
+      const tablinks = document.querySelectorAll(".tablinks");
+      tablinks.forEach(function(tab){
+         tab.addEventListener('click',function(){
+            selectedcat = tab.dataset.catId;
 
-         // Remove active state from all tab buttons
-         const tablinks = document.getElementsByClassName("tablinks");
-         for (let i = 0; i < tablinks.length; i++) {
-            tablinks[i].classList.remove("active");
-         }
+            const tabcontent = document.querySelectorAll(".tabcontent");
+            tabcontent.forEach(function(content){
+               if (content.dataset.catId != selectedcat){
+                  content.style.display = "none";
+                  console.log("REmoved")
+               } else {
+                  content.style.display = "block";
+               }
+               
+            });
 
-         // Display target tab and mark button as active
-         document.getElementById(category_id).style.display = "block";
-         evt.currentTarget.classList.add("active");
-      }
+            for (let i = 0; i < tablinks.length; i++) {
+               tablinks[i].classList.remove("active");
+            }  
+
+            tab.style.display = "block";
+            tab.classList.add("active");
+            
+         });
+      });
 
    </script>
 {% endblock %}
