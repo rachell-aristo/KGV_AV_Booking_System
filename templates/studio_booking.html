@@ -4,13 +4,7 @@
    <div id="booking-data" data-fully-booked='{{ fully_booked_days | tojson | safe }}'></div>
    <h1>Book a studio</h1>
  
-   {% for message in get_flashed_messages() %}
-    <p class="flash">{{ message }}</p>
-   {% endfor %}
-   <!-- For error messages from Python if not all fields are filled when submitting -->
- 
-   <p id="error-message"></p>
-
+   
 
    <form action ="/submit_studio_booking" method = "POST">
       <label>Select date:</label>
@@ -35,7 +29,7 @@
       <select id="timeslot-select" name = "timeslot" disabled required>
          <option value="">Please select a date first</option>
          {% for i in time_slots%}
-         <option value = "{{i.id}}" data-slotid = "{{i.fk_slot_id}}">{{i.name}}</option>
+            <option value = "{{i.id}}" data-slotid = "{{i.fk_slot_id}}">{{i.name}}</option>
          {% endfor %}
       </select>
 
@@ -47,17 +41,6 @@
          <option value = "{{i.id}}" data-studio="{{i.fk_studio_space_id}}">{{i.name}}</option>
          {% endfor %}
       </select>
-
-   <!-- add a done button to finish selecting studio. What this means is that you can select more than one studio, figure this out --> 
- 
-   <!-- <form action ="/submit_studio_booking" method = "POST">
-      <label>Choose a studio space:</label>
-      <select id="studio-select" name = "studio-space" required>
-         <option value="">Please select a studio space</option>
-         {% for i in studio_spaces %}
-         <option value = "{{i.id}}">{{i.name}}</option> 
-         {% endfor %}
-      </select> -->
       
       <label for="booking-reason">Booking reason:</label>
          <textarea id="booking-reason" name="booking-reason" rows="4" cols="50" required></textarea>
@@ -65,16 +48,14 @@
  
       <label for="booking-notes">Extra notes/questions:</label>
          <textarea id="booking-notes" name="booking-notes" rows="4" cols="50"></textarea>
- 
-      <div class="checkbox-row">
-         <input type="checkbox" id="loan-policy-1" name="loan-policy-1" required>
-         <label for="loan-policy-1">I confirm that I will inspect the equipment before checkout and will be held accountable for its condition and functionality when it is returned.</label>
-      </div>
-      <div class="checkbox-row">
-         <input type="checkbox" id="loan-policy-2" name="loan-policy-2" required>
-         <label for="loan-policy-2">I understand that I am responsible for the care and timely return of the booked equipment.</label>
-      </div>
       <input type="submit" value="Submit">
+
+      {% for message in get_flashed_messages() %}
+         <p class="flash">{{ message }}</p>
+      {% endfor %}
+      <!-- For error messages from Python if not all fields are filled when submitting -->
+      <p id="error-message"></p>
+
    </form>
 
    <script src="{{ url_for('static', filename='js/studio_booking.js') }}"></script>

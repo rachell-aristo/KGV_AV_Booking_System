@@ -24,11 +24,11 @@ class LoanStatus(str, enum.Enum):
     REJECTED = "rejected"
     FINISHED = "finished"
 
-class PickUpTime(str, enum.Enum):
-    BEFORE = "before" #before school
-    BREAK = "break"
-    LUNCH = "lunch"
-    AFTER = "after"
+# class PickUpTime(str, enum.Enum):  #I think this should stay as lunch to save arthur pain. If need change should be extra note
+#     BEFORE = "before" #before school
+#     BREAK = "break"
+#     LUNCH = "lunch"
+#     AFTER = "after"
 
 class StudioBookingStatus(str, enum.Enum):
     PENDING = "pending"
@@ -133,7 +133,7 @@ class EquipmentLoan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     loan_start_date = db.Column(db.Date, nullable=False)
     loan_end_date = db.Column(db.Date, nullable=False)
-    pickup_time = db.Column(db.Enum(PickUpTime),nullable = False)
+    # pickup_time = db.Column(db.Enum(PickUpTime),nullable = False)
     status = db.Column(db.Enum(LoanStatus), nullable=False)
     student_loan_reason = db.Column(db.Text, nullable = False)
     student_extra_notes = db.Column(db.Text, nullable = True)
