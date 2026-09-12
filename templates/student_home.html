@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Student Home{% endblock %}
 {% block content %}
+<a href="/studiobooking">Book a studio space</a>
+<a href="/equipbooking">Loan equipment</a>
+
 <h1>Current bookings</h1>
 
 <div class="booking-list">
-    <div class="booking-card">
-        {% for i in studio_current_bookings %}
+    
+    {% for i in studio_current_bookings %}
+        <div class="booking-card">
             <span class="booking-title">{{i.studio_space.name}} &middot; {{i.studio_booking_date}} &middot; {{i.slot.name}}</span>
             <span class="status status-{{i.studio_booking_status.value}}">{{i.studio_booking_status.value}}</span>
             <span class="booking-meta">
@@ -15,8 +19,9 @@
                 {% endfor %}
             </span>
             <span class="booking-meta">Reason: {{i.student_studio_booking_reason}}</span>
-        {% endfor %}
-    </div>
+        </div>
+    {% endfor %}
+    
     {% for i in equip_current_bookings %}
         <div class="booking-card">
             <span class="booking-title">Equipment Booking</span>
