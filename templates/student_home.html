@@ -4,35 +4,78 @@
 <h1>Current bookings</h1>
 
 <div class="booking-list">
-    {% for i in current_bookings %}
     <div class="booking-card">
-        <span class="booking-title">{{i.studio_space.name}} &middot; {{i.studio_booking_date}} &middot; {{i.slot.name}}</span>
-        <span class="status status-{{i.studio_booking_status.value}}">{{i.studio_booking_status.value}}</span>
-        <span class="booking-meta">
-            ID: {{i.id}} &middot; Setup:
-            {% for selection in i.setup_selections %}
-                {{ selection.studio_setup_options.name }}{% if not loop.last %}, {% endif %}
-            {% endfor %}
-        </span>
-        <span class="booking-meta">Reason: {{i.student_studio_booking_reason}}</span>
+        {% for i in studio_current_bookings %}
+            <span class="booking-title">{{i.studio_space.name}} &middot; {{i.studio_booking_date}} &middot; {{i.slot.name}}</span>
+            <span class="status status-{{i.studio_booking_status.value}}">{{i.studio_booking_status.value}}</span>
+            <span class="booking-meta">
+                ID: {{i.id}} &middot; Setup:
+                {% for selection in i.setup_selections %}
+                    {{ selection.studio_setup_options.name }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </span>
+            <span class="booking-meta">Reason: {{i.student_studio_booking_reason}}</span>
+        {% endfor %}
     </div>
-    {% else %}
-    <p class="empty-state">No current bookings.</p>
+    {% for i in equip_current_bookings %}
+        <div class="booking-card">
+            <span class="booking-title">Equipment Booking</span>
+            <span class="status status-{{i.status.value}}">{{i.status.value}}</span>
+            <span class="booking-meta"> Loan period: {{i.loan_start_date}} - {{i.loan_end_date}}</span>
+
+            <span class="booking-meta">
+                ID: {{i.id}} <br>
+                Items:
+                {% for booking_id, items in booking_counts.items() %}
+                    {% for type_id, quantity in items.items() %}
+                        {% if booking_id == i.id %}
+                            {{ equip_type_lookup[type_id] }} x{{ quantity }}{% if not loop.last %}, {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </span>
+            <span class="booking-meta">Reason: {{i.student_loan_reason}}</span>
+        </div>
     {% endfor %}
+        {% if not equip_current_bookings and not studio_current_bookings  %}
+            <p class="empty-state">No current bookings.</p>
+        {% endif %}
 </div>
 
 <h2>Past bookings</h2>
 
 <div class="booking-list">
-    {% for i in past_bookings %}
+    {% for i in studio_past_bookings %}
     <div class="booking-card">
         <span class="booking-title">{{i.studio_space.name}} &middot; {{i.studio_booking_date}} &middot; {{i.slot.name}}</span>
         <span class="status status-{{i.studio_booking_status.value}}">{{i.studio_booking_status.value}}</span>
         <span class="booking-meta">ID: {{i.id}} &middot; Setup: {{i.setup_selections.name}}</span>
         <span class="booking-meta">Reason: {{i.student_studio_booking_reason}}</span>
     </div>
-    {% else %}
-    <p class="empty-state">No past bookings.</p>
     {% endfor %}
+
+    {% for i in equip_past_bookings %}
+        <div class="booking-card">
+            <span class="booking-title">Equipment Booking</span>
+            <span class="status status-{{i.status.value}}">{{i.status.value}}</span>
+            <span class="booking-meta"> Loan period: {{i.loan_start_date}} - {{i.loan_end_date}}</span>
+            <span class="booking-meta">
+                ID: {{i.id}} <br>
+                Items:
+                {% for booking_id, items in booking_counts.items() %}
+                    {% for type_id, quantity in items.items() %}
+                        {% if booking_id == i.id %}
+                            {{ equip_type_lookup[type_id] }} x{{ quantity }}{% if not loop.last %}, {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </span>
+            <span class="booking-meta">Reason: {{i.student_loan_reason}}</span>
+        </div>
+    {% endfor %}
+
+    {% if not equip_past_bookings and not studio_past_bookings  %}
+        <p class="empty-state">No past bookings.</p>
+    {% endif %}
 </div>
 {% endblock %}

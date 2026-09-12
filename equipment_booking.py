@@ -75,13 +75,13 @@ def submit_equip_booking():
     for i in range(len(selectedEquip)):
         fk_equipment_type_id = selectedEquip[i]
         fk_loan_id = new_equip_booking.id
-
-        loanItems = EquipmentLoanItem(
-            fk_equipment_type_id = fk_equipment_type_id,
-            fk_loan_id = fk_loan_id,
-            created = datetime.now()
-        )
-        db.session.add(loanItems)
+        for j in range(selectedQuants[i]):
+            loanItems = EquipmentLoanItem(
+                fk_equipment_type_id = fk_equipment_type_id,
+                fk_loan_id = fk_loan_id,
+                created = datetime.now()
+            )
+            db.session.add(loanItems)
     db.session.commit()
     return redirect(url_for('success_booking')) #redirect user to success booking page
 
