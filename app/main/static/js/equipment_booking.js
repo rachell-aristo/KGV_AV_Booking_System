@@ -25,17 +25,12 @@ const fp = flatpickr("#loan-period", {
             alert("Maximum 3 days allowed! If you need to make a special request, please make note of it in the 'Extra notes' box")
             fp.clear()
         }
-
-
         document.getElementById('loan-start-date').value = startDateStr;
         document.getElementById('loan-end-date').value = endDateStr;
 
         console.log("Start Date:", startDate);
         console.log("End Date:", endDate);
-        console.log("diff:", daysDifference); 
-
-
-        
+        console.log("diff:", daysDifference);    
     }
     }
 });

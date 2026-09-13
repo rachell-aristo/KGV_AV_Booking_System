@@ -86,3 +86,16 @@ const fullyBookedDays = JSON.parse(bookingDataEl.dataset.fullyBooked);
     //The reason we need these js validation checks is because it's possible for user to select the placeholder option
      
     });
+
+    document.querySelectorAll('.studio-card').forEach(card => {
+      card.addEventListener('click', () => {
+         // Remove selected state from all studio cards
+         document.querySelectorAll('.studio-card').forEach(c => c.classList.remove('selected'));
+         
+         // Add selected state to the clicked card
+         card.classList.add('selected');
+         
+         // Store selected studio ID in hidden form input
+         document.getElementById('selected-studio-space').value = card.dataset.studioId;
+      });
+      });

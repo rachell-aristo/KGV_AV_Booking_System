@@ -10,7 +10,7 @@
       <label>Select date:</label>
             <input placeholder = "mm/dd/yy" type = "date" id="booking-date" min="" name = "booking-date" required>
    
-      <div class="cards-grid">
+      <div class="cards-grid studio-grid">
          {% for i in studio_spaces %}
             <div class = "studio-card"  data-studio-id="{{ i.id }}"> 
                <img src= "{{ url_for('static', filename=i.image) }}" style="width:30%">

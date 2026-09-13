@@ -74,7 +74,7 @@ def callback():
         email=user_info['email'],
         created = datetime.now()
         )
-    if user_info['name'].find('[') != -1: #extracts the user's year group from the name cuz KGV has this format
+    if user_info['name'].find('[') != -1: #extracts the user's year group from the name since school emails have this format
         user.year_group = int(user_info['name'][user_info['name'].find('[')+1:user_info['name'].find('[')+3])
     if user_info['email'] in admin_emails: #if the user email is a recorded admin email
         user.role = UserRole.ADMIN
@@ -88,7 +88,6 @@ def callback():
     login_user(user)
     print("'Logged in successfully.'")
     next_url = session.pop('next_url', None)
-    print(f"DEBUG: Redirecting to -> {next_url}")
     if next_url and is_safe_url(next_url): #prevents open redirect attack
         return redirect(next_url) #redirects user either to where they were going before login or home page
     return redirect(url_for('index'))

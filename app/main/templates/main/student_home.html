@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Student Home{% endblock %}
 {% block content %}
-<a href="/studiobooking">Book a studio space</a>
-<a href="/equipbooking">Loan equipment</a>
 
-<h1>Current bookings</h1>
+<div class="page-header">
+    <h1>Current bookings</h1>
+    <div class="header-actions">
+        <a href="/studiobooking" class="btn btn-secondary">Book a studio space</a>
+        <a href="/equipbooking" class="btn">Loan equipment</a>
+    </div>
+</div>
 
 <div class="booking-list">
     

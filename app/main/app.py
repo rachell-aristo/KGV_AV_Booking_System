@@ -34,13 +34,14 @@ def reject():
 @app.route('/success_booking')
 @login_required
 def success_booking():
-    return render_template("success_booking.html")
+    return render_template("main/success_booking.html")
 
 db.init_app(app) #connects SQL database with Flask app
 oauth.init_app(app) #connects the oauth extension to the app
 #blueprints = breaking up your code so it's modular. 
-#These lines register the blueprints so that it knows they exist
 login_manager.init_app(app) #connects flask-login with app
+#These lines register the blueprints so that 
+#app.py knows they exist
 app.register_blueprint(auth) 
 app.register_blueprint(studio_booking)
 app.register_blueprint(student_home)
