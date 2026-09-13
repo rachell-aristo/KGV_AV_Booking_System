@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Admin Home{% endblock %}
+{% block content %}
+    <!-- <div id="data-store" data-equip-bookings="{{ s_equip_bookings | tojson }}"></div> -->
+
+    <div class="tab-container">
+        <div class="tab">
+            <button class="tablinks active" data-tab="dashboard" >Dashboard</button>
+            <button class="tablinks" data-tab="assets">Assets</button>
+            <button class="tablinks" data-tab="booking">Bookings</button>
+            <button class="tablinks" data-tab="students">Students</button>
+        </div>
+    </div>
+
+    <div class="tabcontent active" data-page = "dashboard" id="dashboard"  style = "display: block">
+        <h1>Dashboard</h1>
+        <h2>Today's bookings</h2>
+        <h2>New bookings</h2>
+
+        <h2>Overdue loans</h2>
+    </div>
+
+    <div class="tabcontent active" data-page = "assets" id="assets" style = "display: none">
+        <h1>Assets</h1>
+
+    </div>
+
+    <div class="tabcontent active" data-page = "booking" id="booking" style = "display: none">
+        <h1>Bookings</h1>
+        <table>
+            <tr>
+                <th>Booking ID</th>
+                <th>User</th>
+                <th>Request Date</th>
+                <!-- <th>Items</th> -->
+                <th>Loan Period</th>
+                <th>Status</th>
+            </tr>
+            {% for record in equip_bookings %}
+                <tr class = "record" data-id = {{record.id}}>
+                    <td>{{record.id}}</td>
+                    <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
+                    <td>{{record.created.strftime("%b %d, %Y")}}</td>
+                    <!-- <td>
+                        {% for booking_id, items in loan_items.items() %}
+                            {% for type_id, quantity in items.items() %}
+                                {% if booking_id == record.id %}
+                                    {{ type_lookup.get(type_id, 'Unknown Item') }} x{{ quantity }}{% if not loop.last %}, {% endif %} <br>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </td> -->
+                    <td>{{record.loan_start_date.strftime("%b %d, %Y")}} - {{record.loan_end_date.strftime("%b %d, %Y")}}</td>
+                    <td>
+                        <span class="status status-{{ record.status.value | lower }}">
+                            {{ record.status.value | upper }}
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <div id="recordModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h1 id = "modalID"></h1>
+                <p id = "modalUser">Requested by: </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabcontent active" data-page = "students" id="students" style = "display: none">
+        <h1>Students</h1>
+    </div>
+
+
+
+
+
+
+
+
+
+
+    <script>
+        const tablinks = document.querySelectorAll(".tablinks");
+        tablinks.forEach(function(tab){
+            tab.addEventListener('click',function(){ //when a tablink is clicked
+                selectedTab = tab.dataset.tab;
+                const tabcontent = document.querySelectorAll(".tabcontent");
+                tabcontent.forEach(function(content){
+                    if (content.dataset.page != selectedTab){ //if item doesn't belong to selected category
+                        content.style.display = "none";
+                    } else {
+                        content.style.display = "block";
+                    }
+                });
+                for (let i = 0; i < tablinks.length; i++) { //makes non selected tab links inactive
+                    tablinks[i].classList.remove("active");
+                }  
+                tab.style.display = "block";
+                tab.classList.add("active");
+            });
+        });
+
+        // const dataStore = document.getElementById('data-store');
+        // const equipBookings = JSON.parse(dataStore.getAttribute('data-equip-bookings'));
+
+        const records = document.querySelectorAll(".record");
+        var modal = document.getElementById("recordModal");
+        var span = document.getElementsByClassName("close")[0];
+        records.forEach(function(rec){
+            rec.addEventListener('click',function(){
+                recId = rec.dataset.id;
+                document.getElementById("modalID").textContent = "Booking ID: " + recId;
+                // document.getElementById("modalUser").append(equipBookings[recId].fk_user_id);
+                modal.style.display = "block";
+
+            });
+        });
+
+        span.addEventListener('click',function(){
+            modal.style.display = "none";
+        });
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+}
+
+
+    </script>
+
+
+
+{% endblock %}

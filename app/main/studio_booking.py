@@ -33,7 +33,7 @@ def data_fetch():
         if value >= len(time_slots): 
             # if the number of booked slots for that studio on that day is more or equal to # of timeslots, add to fully-booked
             fully_booked_days[key[1]].append(key[0].strftime("%Y-%m-%d")) #appends the formatted date of when studio is fully booked to fully_booked_days
-    return render_template("studio_booking.html", studio_spaces = studio_spaces,setup_options = setup_options, time_slots = time_slots, fully_booked_days = fully_booked_days)
+    return render_template("main/studio_booking.html", studio_spaces = studio_spaces,setup_options = setup_options, time_slots = time_slots, fully_booked_days = fully_booked_days)
 
 @studio_booking.route('/booked_slots')
 @login_required

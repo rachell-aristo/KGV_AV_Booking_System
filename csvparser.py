@@ -3,11 +3,11 @@
 import pandas as pd
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
 from flask_login import current_user
-from extensions import db
-from models import User, UserRole, Asset, EquipmentLoanItem, AssetStatus, EquipmentType, EquipmentCategory
+from src.extensions import db
+from src.models import User, UserRole, Asset, EquipmentLoanItem, AssetStatus, EquipmentType, EquipmentCategory
 from flask_login import login_required
 from sqlalchemy import select, update
-from app import app
+from src.app import app
 from datetime import datetime
 
 

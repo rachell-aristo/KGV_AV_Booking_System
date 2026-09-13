@@ -5,10 +5,10 @@ from flask_login import login_required, current_user
 from sqlalchemy import select
 from collections import Counter
 
+#COUNTS UP THE NUMBER OF EQUIPMENT/TYPE FOR ALL USER'S BOOKINGS#
 
-def count_equip_booking_items():
+def count_equip_booking_items(equip_bookings):
         booking_counts = {}
-        equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() 
         equip_booking_ids = [b.id for b in equip_bookings]
         loan_items = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id.in_(equip_booking_ids))).scalars().all() 
         for booking in equip_booking_ids:
@@ -20,7 +20,7 @@ def count_equip_booking_items():
         return booking_counts
 
 ###########################
-
+#LOOK UP TABLE TO CONVERT EQUIPMENT TYPE IDs TO NAME STRINGS#
 
 def equip_type_lookup():
     equip_type_lookup = {} #dict of equipment_type ids and corresponding name of item

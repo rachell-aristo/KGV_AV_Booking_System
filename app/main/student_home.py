@@ -1,9 +1,8 @@
-from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
+from flask import Blueprint, render_template
 from extensions import db
-from models import EquipmentType, LoanStatus, EquipmentLoanItem, StudioBooking,StudioBookingStatus, EquipmentLoan
+from models import LoanStatus, EquipmentLoanItem, StudioBooking,StudioBookingStatus, EquipmentLoan
 from flask_login import login_required, current_user
 from sqlalchemy import select
-from collections import Counter
 from utils import count_equip_booking_items, equip_type_lookup
 
 student_home = Blueprint('student_home', __name__) #creates flask blueprint student_home
@@ -11,7 +10,7 @@ student_home = Blueprint('student_home', __name__) #creates flask blueprint stud
 
 @student_home.route('/student_home')
 @login_required
-def fetch_date():
+def fetch_data():
     user_id = current_user.id
     print(user_id)
     studio_current_bookings = []
@@ -27,8 +26,8 @@ def fetch_date():
     # equip_types_in_booking = [] #list of fk_equipment_type ids
     
     item_names = []
-    equipment_counts = Counter(item_names)
-    booking_counts = count_equip_booking_items()
+    equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() 
+    booking_counts = count_equip_booking_items(equip_bookings)
 
     
 
@@ -53,7 +52,7 @@ def fetch_date():
 
     print('past',studio_past_bookings)
 
-    return render_template("student_home.html", loan_items = loan_items, equipment_counts = equipment_counts, studio_current_bookings = studio_current_bookings, 
+    return render_template("main/student_home.html", loan_items = loan_items, studio_current_bookings = studio_current_bookings, 
                            studio_past_bookings = studio_past_bookings, booking_counts = booking_counts, equip_current_bookings = equip_current_bookings, 
                            equip_past_bookings = equip_past_bookings,
                            equip_type_lookup = equip_type_lookup)

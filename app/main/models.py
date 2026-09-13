@@ -142,6 +142,19 @@ class EquipmentLoan(db.Model):
     user = db.relationship('User')
     created = db.Column(db.DateTime, nullable=False)
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "loan_start_date": self.loan_start_date,
+            "loan_end_date": self.loan_start_date,
+            "status" : self.status,
+            "student_loan_reason" : self.student_loan_reason,
+            "student_extra_notes" : self.student_extra_notes,
+            "fk_user_id" : self.fk_user_id,
+            "created" : self.created
+        }
+
+
     def __repr__(self):
             return f'<EquipmentLoan {self.id} {self.fk_user_id}>'
 

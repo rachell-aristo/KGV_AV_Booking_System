@@ -21,7 +21,8 @@ def data_fetch():
     fully_booked_days = {} #structure of fully_booked is a dict where keys = studio_id and value = array of dates where it's fully booked for that studio
     equipment_id_list = []
     equip_avail_quantity_list = []
-    booking_counts = count_equip_booking_items()
+    equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() 
+    booking_counts = count_equip_booking_items(equip_bookings)
     overdue_loans = []
     type_lookup = equip_type_lookup()
 
@@ -45,7 +46,7 @@ def data_fetch():
             else:
                 equip_avail_quantity_list.append((item.quantity)-unavail)
     
-    return render_template("equipment_booking.html", equipment_types = equipment_types, fully_booked_days = fully_booked_days,
+    return render_template("main/equipment_booking.html", equipment_types = equipment_types, fully_booked_days = fully_booked_days,
     equipment_id_list = equipment_id_list, equipment_avail_quantity_list = equip_avail_quantity_list,
     equipment_category = equipment_category, overdue_loans = overdue_loans, booking_counts = booking_counts,
     equip_type_lookup = type_lookup)

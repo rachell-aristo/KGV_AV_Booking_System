@@ -8,6 +8,7 @@ from auth import auth, oauth, login_manager #these lines loads blueprints so the
 from studio_booking import studio_booking
 from student_home import student_home
 from equipment_booking import equip_booking
+from admin.admin_home import admin_home
 load_dotenv() #loads values from .env file into here so can access
 
 app = Flask(__name__) #Creates this file as a Flask application
@@ -20,11 +21,11 @@ def index():
     if not current_user.is_authenticated: #if not logged in
         return render_template("index.html")
     if current_user.role == UserRole.STUDENT:
-        return redirect(url_for('student_home.fetch_date'))
+        return redirect(url_for('student_home.fetch_data'))
     elif current_user.role == UserRole.TEACHER:
         return redirect(url_for('teacher_home'))
     elif current_user.role == UserRole.ADMIN:
-        return render_template("admin_home.html")
+        return redirect(url_for('admin_home.fetch_data'))
 
 @app.route('/reject') 
 def reject():
@@ -44,8 +45,7 @@ app.register_blueprint(auth)
 app.register_blueprint(studio_booking)
 app.register_blueprint(student_home)
 app.register_blueprint(equip_booking)
-
-
+app.register_blueprint(admin_home)
 
 
 
@@ -53,6 +53,6 @@ app.register_blueprint(equip_booking)
 if __name__ == "__main__": #when you run this file directly
     with app.app_context():
         db.create_all() #creates tables defined ONLY if they are not already created
-        print("Tables created!")
+        print("App running!")
     app.run(debug=True, port=5001) #opens on port 5001 with debug mode on
 
