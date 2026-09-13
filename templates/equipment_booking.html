@@ -5,39 +5,64 @@
    <div id="booking-data" data-fully-booked='{{ fully_booked_days | tojson | safe }}'></div>
 
    <h1>Book equipment</h1>
- 
-   <form action ="/submit_equip_booking" method = "POST">
-      <label for="loan-period">Select loan period:</label>
-            <input placeholder = "mm/dd/yy" type = "date" id="loan-period" min="" required>
-            <input id="loan-start-date" type="hidden" name="loan-start-date">
-            <input id="loan-end-date" type="hidden" name="loan-end-date">
 
-      <div class = "tab">
-         {% for i in equipment_category %}
-            <button 
-               class="tablinks {% if loop.first %}active{% endif %}"
-               type = "button"
-               data-cat-id= "{{ i.id }}"> 
-               {{i.name}}
-            </button>
-         {% endfor %}
-      </div>
+   {% if overdue_loans %}
+      <h1>You have overdue loan(s). You must return them before borrowing.</h1>
+      {% for i in overdue_loans%}
+         <div class="booking-card">
+            <span class="booking-title">Equipment Booking</span>
+            <span class="status status-{{i.status.value}}">Overdue</span>
+            <span class="booking-meta"> Loan period: {{i.loan_start_date}} - {{i.loan_end_date}}</span>
+            <span class="booking-meta">
+               ID: {{i.id}} <br>
+               Items:
+               {% for booking_id, items in booking_counts.items() %}
+                  {% for type_id, quantity in items.items() %}
+                        {% if booking_id == i.id %}
+                           {{ equip_type_lookup[type_id] }} x{{ quantity }}{% if not loop.last %}, {% endif %}
+                        {% endif %}
+                  {% endfor %}
+               {% endfor %}
+            </span>
+            <span class="booking-meta">Reason: {{i.student_loan_reason}}</span>
+         </div>
+      {% endfor %}
 
-      <!-- Tab content -->
-       {% for cat in equipment_category %}
-         <div data-cat-id="{{ cat.id }}" class="tabcontent" {% if loop.first %}style="display: block;"{% else %}style="display: none;"{% endif %}>            <div class="cards-grid">
-               {% for i in equipment_types %}
-                  {% if i.fk_equipment_category_id | int == cat.id | int %}
-                     <div class="equip-card" data-equip-id="{{ i.id }}"> 
-                        <img src="{{ url_for('static', filename=i.image) }}" alt="{{ i.name }}">
-                        <div class="container">
-                           <h4><b>{{ i.name }}</b></h4>
-                              {% if i.descript != "None" %}
-                                 <p>{{ i.descript }}</p> 
-                              {% endif %}
+   {% else %}
+      <form action ="/submit_equip_booking" method = "POST">
+         <label for="loan-period">Select loan period:</label>
+               <input placeholder = "mm/dd/yy" type = "date" id="loan-period" min="" required>
+               <input id="loan-start-date" type="hidden" name="loan-start-date">
+               <input id="loan-end-date" type="hidden" name="loan-end-date">
+
+         <div class = "tab">
+            {% for i in equipment_category %}
+               <button 
+                  class="tablinks {% if loop.first %}active{% endif %}"
+                  type = "button"
+                  data-cat-id= "{{ i.id }}"> 
+                  {{i.name}}
+               </button>
+            {% endfor %}
+         </div>
+
+         <!-- Tab content -->
+         {% for cat in equipment_category %}
+            <div data-cat-id="{{ cat.id }}" class="tabcontent" {% if loop.first %}style="display: block;"{% else %}style="display: none;"{% endif %}>            <div class="cards-grid">
+                  {% for i in equipment_types %}
+                     {% if i.fk_equipment_category_id | int == cat.id | int %}
+                        <div class="equip-card" data-equip-id="{{ i.id }}"> 
+                           <img src="{{ url_for('static', filename=i.image) }}" alt="{{ i.name }}">
+                           <div class="container">
+                              <h4><b>{{ i.name }}</b></h4>
+                                 {% if i.descript != "None" %}
+                                    <p>{{ i.descript }}</p> 
+                                 {% endif %}
                                  {% if equipment_avail_quantity_list[equipment_types.index(i)] == 0 %}
                                     <p>Unavaliable</p> 
                                     <!-- add a thing where it says when it will be returned -->
+                                 {% elif equipment_avail_quantity_list[equipment_types.index(i)] == 'OFF_LIMITS' %}
+                                    <p>Unavaliable for your year group</p>
                                  {% else %}
                                     <label for="quantity">Quantity:</label>
                                     <select name= "quantity" id="quantity">
@@ -46,45 +71,44 @@
                                        {% endfor %}
                                     </select>
                                  {% endif %}
+                                 
                               
-                           
-                           <!-- add validation, if descript is none don't show it -->
+                              <!-- add validation, if descript is none don't show it -->
+                           </div>
                         </div>
-                     </div>
-                  {% endif %}
-               {% endfor %}
+                     {% endif %}
+                  {% endfor %}
+               </div>
             </div>
+         {% endfor %}
+         <input type="hidden" id="selected-equip" name="selected-equip">
+         <input type="hidden" id="selected-quants" name="selected-quants">
+
+         <input id="selected-studio-space" type="hidden" name="studio-space">
+
+         <label for="booking-reason">Booking reason:</label>
+            <textarea id="booking-reason" name="booking-reason" rows="4" cols="50" required></textarea>
+            <!-- I chose to use text area since it allows styling of input box size unlike input tag -->
+   
+         <label for="booking-notes">Extra notes/questions:</label>
+            <textarea id="booking-notes" name="booking-notes" rows="4" cols="50"></textarea>
+   
+         <div class="checkbox-row">
+            <input type="checkbox" id="loan-policy-1" name="loan-policy-1" required>
+            <label for="loan-policy-1">I confirm that I will inspect the equipment before checkout and will be held accountable for its condition and functionality when it is returned.</label>
          </div>
-      {% endfor %}
-      <input type="hidden" id="selected-equip" name="selected-equip">
-      <input type="hidden" id="selected-quants" name="selected-quants">
+         <div class="checkbox-row">
+            <input type="checkbox" id="loan-policy-2" name="loan-policy-2" required>
+            <label for="loan-policy-2">I understand that I am responsible for the care and timely return of the booked equipment.</label>
+         </div>
 
-      <input id="selected-studio-space" type="hidden" name="studio-space">
-
-      <label for="booking-reason">Booking reason:</label>
-         <textarea id="booking-reason" name="booking-reason" rows="4" cols="50" required></textarea>
-         <!-- I chose to use text area since it allows styling of input box size unlike input tag -->
- 
-      <label for="booking-notes">Extra notes/questions:</label>
-         <textarea id="booking-notes" name="booking-notes" rows="4" cols="50"></textarea>
- 
-      <div class="checkbox-row">
-         <input type="checkbox" id="loan-policy-1" name="loan-policy-1" required>
-         <label for="loan-policy-1">I confirm that I will inspect the equipment before checkout and will be held accountable for its condition and functionality when it is returned.</label>
-      </div>
-      <div class="checkbox-row">
-         <input type="checkbox" id="loan-policy-2" name="loan-policy-2" required>
-         <label for="loan-policy-2">I understand that I am responsible for the care and timely return of the booked equipment.</label>
-      </div>
-
-      {% for message in get_flashed_messages() %}
-         <p class="flash">{{ message }}</p>
-      {% endfor %}
-         <p id="error-message"></p>
-      <!-- For error messages from Python if not all fields are filled when submitting -->
-      
-      <input type="submit" value="Submit">
-   </form>
-
+         {% for message in get_flashed_messages() %}
+            <p class="flash">{{ message }}</p>
+         {% endfor %}
+            <p id="error-message"></p>
+         <!-- For error messages from Python if not all fields are filled when submitting -->
+         <input type="submit" value="Submit">
+      </form>
+   {% endif %}
    <script src="{{ url_for('static', filename='js/equipment_booking.js') }}"></script>
 {% endblock %}

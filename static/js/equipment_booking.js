@@ -83,15 +83,21 @@ equipQuants.forEach(function(select){
     });
 });
 
-document.querySelector('form').addEventListener('submit', function(event) { //when form is submitted
-    const form = document.querySelector('form');
-    if (selectedEquip.length === 0){
-    event.preventDefault();  // stops the form from submitting
-    document.getElementById('error-message').textContent = "Please select at least one item to loan."; //CHECK IF THESE CHECKS WORK
-    }
-    
-    document.getElementById('selected-equip').value = JSON.stringify(selectedEquip);
-    document.getElementById('selected-quants').value = JSON.stringify(quants);
+let form = document.querySelector('form')
 
-    
-});
+if (form !== null){
+    form.addEventListener('submit', function(event) { //when form is submitted
+        const form = document.querySelector('form');
+        if (selectedEquip.length === 0){
+            event.preventDefault();  // stops the form from submitting
+            document.getElementById('error-message').textContent = "Please select at least one item to loan."; //CHECK IF THESE CHECKS WORK
+        }
+        
+        document.getElementById('selected-equip').value = JSON.stringify(selectedEquip);
+        document.getElementById('selected-quants').value = JSON.stringify(quants); 
+    });
+
+
+}
+
+

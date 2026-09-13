@@ -4,8 +4,10 @@ from models import EquipmentType, LoanStatus, EquipmentLoanItem, StudioBooking,S
 from flask_login import login_required, current_user
 from sqlalchemy import select
 from collections import Counter
+from utils import count_equip_booking_items, equip_type_lookup
 
 student_home = Blueprint('student_home', __name__) #creates flask blueprint student_home
+
 
 @student_home.route('/student_home')
 @login_required
@@ -17,28 +19,18 @@ def fetch_date():
 
     equip_current_bookings = []
     equip_past_bookings = []
-    equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == user_id)).scalars().all() 
+
+    equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() 
     equip_booking_ids = [b.id for b in equip_bookings]
-    # equip_types_in_booking = [] #list of fk_equipment_type ids
-    equip_type_lookup = {} #dict of equipment_type ids and corresponding name of item
-
-    # for i in equip_bookings:
-    #     equip_types_in_booking.append(i.id)
-
-    for i in db.session.execute(select(EquipmentType)).scalars().all():
-        equip_type_lookup[i.id] = i.name
-
     loan_items = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id.in_(equip_booking_ids))).scalars().all() 
+    
+    # equip_types_in_booking = [] #list of fk_equipment_type ids
+    
     item_names = []
     equipment_counts = Counter(item_names)
-    booking_counts = {}
+    booking_counts = count_equip_booking_items()
 
-    for booking in equip_booking_ids:
-        item_names = []
-        for item in loan_items:
-            if item.fk_loan_id == booking:
-                item_names.append(item.fk_equipment_type_id)
-        booking_counts[booking] = Counter(item_names)
+    
 
     print('equipt',booking_counts)
 
