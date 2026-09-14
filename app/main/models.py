@@ -3,6 +3,8 @@ from flask_login import UserMixin
 import enum
 from sqlalchemy import ForeignKey
 from sqlalchemy import Time
+from datetime import datetime
+
 
 DefaultLoanDays = 3
 
@@ -18,11 +20,12 @@ class AssetStatus(str, enum.Enum):
     UPCOMING = "upcoming" #there's an upcoming loan with it 
 
 class LoanStatus(str, enum.Enum):
-    OVERDUE = "overdue"
+    OVERDUE = "overdue" #uhhh we need a system to update loanStatus actually to overdue thenn
     PENDING = "pending"
     CONFIRMED = "confirmed"
     REJECTED = "rejected"
     FINISHED = "finished"
+    CANCELED = "canceled"
 
 # class PickUpTime(str, enum.Enum):  #I think this should stay as lunch to save arthur pain. If need change should be extra note
 #     BEFORE = "before" #before school
@@ -35,6 +38,7 @@ class StudioBookingStatus(str, enum.Enum):
     CONFIRMED = "confirmed"
     REJECTED = "rejected"
     FINISHED = "finished"
+    CANCELED = "canceled"
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -153,7 +157,6 @@ class EquipmentLoan(db.Model):
             "fk_user_id" : self.fk_user_id,
             "created" : self.created
         }
-
 
     def __repr__(self):
             return f'<EquipmentLoan {self.id} {self.fk_user_id}>'

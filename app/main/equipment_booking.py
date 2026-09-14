@@ -27,13 +27,13 @@ def data_fetch():
     type_lookup = equip_type_lookup()
 
     for i in bookings: #Checks if user has overdue bookings. Eventually need to figure out how to manually override this from admin panel
-        if i.status != LoanStatus.FINISHED and i.loan_end_date < datetime.now().date():
+        if i.status == LoanStatus.OVERDUE:
             overdue_loans.append(i)
     
     for item in equipment_types:
         equipment_id_list.append(item.id)
         unavail = 0
-        if item.min_year_group >= current_user.year_group:
+        if item.min_year_group > current_user.year_group:
             equip_avail_quantity_list.append('OFF_LIMITS') 
             #if equipment is not permitted for their year group
         else:

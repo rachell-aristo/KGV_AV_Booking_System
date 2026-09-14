@@ -12,7 +12,6 @@ student_home = Blueprint('student_home', __name__) #creates flask blueprint stud
 @login_required
 def fetch_data():
     user_id = current_user.id
-    print(user_id)
     studio_current_bookings = []
     studio_past_bookings = []
 
@@ -22,16 +21,14 @@ def fetch_data():
     equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() 
     equip_booking_ids = [b.id for b in equip_bookings]
     loan_items = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id.in_(equip_booking_ids))).scalars().all() 
-    
+    type_lookup = equip_type_lookup()
     # equip_types_in_booking = [] #list of fk_equipment_type ids
     
     item_names = []
-    equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() 
+    equip_bookings = db.session.execute(select(EquipmentLoan)
+                                        .where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() 
     booking_counts = count_equip_booking_items(equip_bookings)
-
-    
-
-    print('equipt',booking_counts)
+    print(booking_counts)
 
     studio_bookings = db.session.execute(select(StudioBooking).where(StudioBooking.fk_user_id == user_id)).scalars().all() 
     #selects all bookings this student had made
@@ -48,12 +45,9 @@ def fetch_data():
         elif i.status == (LoanStatus.FINISHED) or i.status == (LoanStatus.REJECTED):
             equip_past_bookings.append(i)
 
-    print('books',equip_bookings)
-
-    print('past',studio_past_bookings)
 
     return render_template("main/student_home.html", loan_items = loan_items, studio_current_bookings = studio_current_bookings, 
                            studio_past_bookings = studio_past_bookings, booking_counts = booking_counts, equip_current_bookings = equip_current_bookings, 
                            equip_past_bookings = equip_past_bookings,
-                           equip_type_lookup = equip_type_lookup)
+                           type_lookup = type_lookup)
 #render the html page and pass values into it that html page will show with jinga

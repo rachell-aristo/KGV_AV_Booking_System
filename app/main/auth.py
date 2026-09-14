@@ -76,6 +76,7 @@ def callback():
         )
     if user_info['name'].find('[') != -1: #extracts the user's year group from the name since school emails have this format
         user.year_group = int(user_info['name'][user_info['name'].find('[')+1:user_info['name'].find('[')+3])
+        print(user.year_group)
     if user_info['email'] in admin_emails: #if the user email is a recorded admin email
         user.role = UserRole.ADMIN
     elif user_info['email'] in teacher_emails: 

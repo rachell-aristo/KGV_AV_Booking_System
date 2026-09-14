@@ -19,7 +19,7 @@ app.config["SESSION_PERMANENT"] = False #Sessions expire when the browser is clo
 @app.route('/') #what happens on index main page
 def index():
     if not current_user.is_authenticated: #if not logged in
-        return render_template("index.html")
+        return render_template("main/index.html")
     if current_user.role == UserRole.STUDENT:
         return redirect(url_for('student_home.fetch_data'))
     elif current_user.role == UserRole.TEACHER:

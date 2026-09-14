@@ -38,7 +38,7 @@
                 {% for booking_id, items in booking_counts.items() %}
                     {% for type_id, quantity in items.items() %}
                         {% if booking_id == i.id %}
-                            {{ equip_type_lookup[type_id] }} x{{ quantity }}{% if not loop.last %}, {% endif %}
+                            {{ type_lookup[type_id] }} x{{ quantity }}{% if not loop.last %}, {% endif %}
                         {% endif %}
                     {% endfor %}
                 {% endfor %}

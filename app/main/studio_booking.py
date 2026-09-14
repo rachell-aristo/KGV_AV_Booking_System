@@ -52,7 +52,7 @@ def get_booked_slots():
 def missing_input(message):
     flash(message)
     return redirect(url_for('studio_booking.data_fetch')) 
-    #if any part of form is not filled in, redirect user to /data fetch (this is a back up only html verification fails)
+    #if any part of form is not filled in, redirect user to /data fetch (this is a back up only if html verification fails)
 
 @studio_booking.route('/submit_studio_booking', methods=['POST']) #using POST method so submitted data is not publicly shown in URL
 @login_required
