@@ -20,18 +20,24 @@ admin_home = Blueprint('admin_home', __name__) #creates flask blueprint admin_ho
 def fetch_data():
     equip_bookings = db.session.execute(select(EquipmentLoan)).scalars().all() 
     serialized_equip_bookings = [loan.to_dict() for loan in equip_bookings]
+
     studio_bookings = db.session.execute(select(StudioBooking)).scalars().all() 
     serialized_studio_bookings = [loan.to_dict() for loan in studio_bookings]
+
+    users = db.session.execute(select(User)).scalars().all() 
+    serialized_users = [user.to_dict() for user in users]
+    print('users',serialized_users)
+
     loan_items = {booking_id: dict(counter) 
     for booking_id, counter in count_equip_booking_items(equip_bookings).items()}
     type_lookup = equip_type_lookup()
 
-    print(serialized_studio_bookings)
     user_lookup = {} #dict of user ids and corresponding name
     for i in db.session.execute(select(User)).scalars().all():
         user_lookup[i.id] = i.name
 
-    return render_template("admin/admin_home.html", s_studio_bookings = serialized_studio_bookings, equip_bookings = equip_bookings, user_lookup = user_lookup, 
+    return render_template("admin/admin_home.html", s_studio_bookings = serialized_studio_bookings, equip_bookings = equip_bookings, 
+                           user_lookup = user_lookup, s_users = serialized_users,
                            loan_items = loan_items, type_lookup = type_lookup, s_equip_bookings = serialized_equip_bookings)
 
 @admin_home.route('/update_loan_status', methods=['POST'])

@@ -53,6 +53,16 @@ class User(UserMixin, db.Model):
         db.CheckConstraint('year_group <= 13 AND year_group >= 7'),
     )
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "role": self.role,
+            "year_group": self.year_group,
+            "created" : self.created
+        }
+
     def __repr__(self):
         return f'<User {self.id} {self.name} ({self.role})>'
     

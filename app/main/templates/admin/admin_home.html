@@ -117,6 +117,38 @@
 
     <div class="tabcontent active" data-page = "students" id="students" style = "display: none">
         <h1>Students</h1>
+        <div class = "filter-container">
+            <div class="panel panel-primary filterable">
+            <div><button id="filter-btn">Filter</button></div>
+            <table id = "studentTable">
+                <tr class = "filters" style="display: none;">
+                    <th><input type="text" placeholder="User" disabled></th>
+                    <th><input type="text" placeholder="Email" disabled></th>
+                    <th><input type="text" placeholder="Name" disabled></th>
+                    <th><input type="text" placeholder="Role" disabled></th>
+                    <th><input type="text" placeholder="Year Group" disabled></th>
+                </tr>
+                <tr class = "headings">
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Year Group</th>
+                </tr>
+                <tbody id="table-body">
+                    {% for user in s_users %}
+                        <tr class = "user" data-id = "{{user.id}}">
+                            <td>{{user.id}}</td>
+                            <td>{{user.email}}</td>
+                            <td>{{user.name}}</td>
+                            <td>{{user.role.value | upper}}</td>
+                            <td>{{user.year_group}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tr id="no-result" class="no-result" style="display: none;"><td colspan="4">No result found</td></tr>
+            </table>     
+         </div>
     </div>
 
 
