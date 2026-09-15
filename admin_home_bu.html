@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+{% block title %}Admin Home{% endblock %}
+{% block content %}
+    <!-- <div id="data-store" data-equip-bookings="{{ s_equip_bookings | tojson }}"></div> -->
+
+    <div class="tab-container">
+        <div class="tab">
+            <button class="tablinks active" data-tab="dashboard" >Dashboard</button>
+            <button class="tablinks" data-tab="assets">Assets</button>
+            <button class="tablinks" data-tab="booking">Bookings</button>
+            <button class="tablinks" data-tab="students">Students</button>
+        </div>
+    </div>
+
+    <div class="tabcontent active" data-page = "dashboard" id="dashboard"  style = "display: block">
+        <h1>Dashboard</h1>
+        <h2>Today's bookings</h2>
+        <h2>New bookings</h2>
+
+        <h2>Overdue loans</h2>
+    </div>
+
+    <div class="tabcontent active" data-page = "assets" id="assets" style = "display: none">
+        <h1>Assets</h1>
+
+    </div>
+
+    <div class="tabcontent active" data-page = "booking" id="booking" style = "display: none">
+        <h1>Equipment Bookings</h1>
+        <input type="text" id="equipSearch" placeholder="Search for equipment booking..">
+        <table id = "equipTable">
+            <tr>
+                <th>Booking ID</th>
+                <th>User</th>
+                <th>Request Date</th>
+                <!-- <th>Items</th> -->
+                <th>Loan Period</th>
+                <th>Status</th>
+            </tr>
+            {% for record in equip_bookings %}
+                <tr class = "record" data-id = "{{record.id}}">
+                    <td>{{record.id}}</td>
+                    <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
+                    <td>{{record.created.strftime("%b %d, %Y")}}</td>
+                    <td>{{record.loan_start_date.strftime("%b %d, %Y")}} - {{record.loan_end_date.strftime("%b %d, %Y")}}</td>
+                    <td>
+                        <span class="status status-{{ record.status.value | lower }}">
+                            {{ record.status.value | upper }}
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <h1>Studio Bookings</h1>
+        <input type="text" id="studioSearch" placeholder="Search for studio booking..">
+
+        <table>
+            <tr>
+                <th>Booking ID</th>
+                <th>User</th>
+                <th>Studio Space</th>
+                <th>Slot</th>
+                <th>Booked Date</th>
+                <th>Status</th>
+            </tr>
+            {% for record in s_studio_bookings %}
+                <tr class = "studioRecord" data-id = "{{record.id}}">
+                    <td>{{record.id}}</td>
+                    <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
+                    <td>{{record.fk_studio_space_id}}</td>
+                    <td>{{record.fk_slot_id}}</td>
+                    <td>{{record.booking_date.strftime("%b %d, %Y")}}</td>
+                    <td>
+                        <span class="status status-{{ record.status.value | lower }}">
+                            {{ record.status.value | upper }}
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <div id="recordModal" class="modal">
+            <div class="modal-content" >
+                <div class = "modal-body">
+                    <span class="close">&times;</span>
+                    <h1><span class="label">ID: #</span> <span id="modalId"></span></h1>
+                    <p><span class="label">Status:</span> <span id="modalStatus"></span></p>
+                    <p><span class="label">Requested by:</span> <span id="modalUser"></span></p>
+                    <p><span class="label">Requested on:</span> <span id="modalCreated"></span></p>
+                    <p><span class="label">Loan Period:</span> <span id="modalPeriod"></span></p>
+                    <p><span class="label">Items:</span> <span id="modalItems"></span></p>
+                    <p><span class="label">Booking reason:</span> <span id="modalReason"></span></p>
+                    <p id="modalNotes"></p>
+                </div>
+                <div class="modal-actions">
+                    <button id = "approve" style = "display: none">Approve</button>
+                    <button id = "reject" style = "display: none">Reject</button>
+                    <!-- only appear if loan is not approved -->
+                    <button id = "checkIn" style = "display: none">Check in</button>
+                    <button id = "cancel" style = "display: none">Cancel</button>  
+                    <button id = "remind" style = "display: none">Remind</button> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabcontent active" data-page = "students" id="students" style = "display: none">
+        <h1>Students</h1>
+    </div>
+
+
+
+
+
+
+
+
+
+
+    <script>
+    //     const equipBookings = {{ s_equip_bookings | tojson | safe }};
+    //     const studioBookings = {{ s_studio_bookings | tojson | safe }};
+    //     const userLookup = {{ user_lookup | tojson | safe }};
+    //     const loanItems = {{ loan_items | tojson | safe }};
+    //     const typeLookup = {{ type_lookup | tojson | safe }};
+    //     console.log(studioBookings)
+
+    //     const tablinks = document.querySelectorAll(".tablinks");
+    //     tablinks.forEach(function(tab){
+    //         tab.addEventListener('click',function(){ //when a tablink is clicked
+    //             let selectedTab = tab.dataset.tab;
+    //             const tabcontent = document.querySelectorAll(".tabcontent");
+    //             tabcontent.forEach(function(content){
+    //                 if (content.dataset.page != selectedTab){ //if item doesn't belong to selected category
+    //                     content.style.display = "none";
+    //                 } else {
+    //                     content.style.display = "block";
+    //                 }
+    //             });
+    //             for (let i = 0; i < tablinks.length; i++) { //makes non selected tab links inactive
+    //                 tablinks[i].classList.remove("active");
+    //             }  
+    //             tab.style.display = "block";
+    //             tab.classList.add("active");
+    //         });
+    //     });
+
+    //     // When modal is clicked
+    //     const records = document.querySelectorAll(".record");
+    //     var modal = document.getElementById("recordModal");
+    //     var span = document.getElementsByClassName("close")[0];
+    //     let recId;
+
+    //     const approve = document.getElementById("approve");
+    //     const reject = document.getElementById("reject");
+    //     const cancel = document.getElementById("cancel");
+    //     const checkIn = document.getElementById("checkIn");
+    //     const remind = document.getElementById("remind");
+
+    //     function confirmedButtons(){
+    //         approve.style.display = "none";
+    //         reject.style.display = "none";
+    //         cancel.style.display = "block";
+    //         checkIn.style.display = "block";
+    //         remind.style.display = "none";
+    //     }
+
+    //     function pendingButtons(){
+    //         approve.style.display = "block";
+    //         reject.style.display = "block";
+    //         cancel.style.display = "none";
+    //         checkIn.style.display = "none";
+    //         remind.style.display = "none";
+    //     }
+
+    //     function overdueButtons(){
+    //         approve.style.display = "none";
+    //         reject.style.display = "none";
+    //         cancel.style.display = "none";
+    //         checkIn.style.display = "none";
+    //         remind.style.display = "block";
+    //     }
+
+    //     function noButtons(){
+    //         approve.style.display = "none";
+    //         reject.style.display = "none";
+    //         cancel.style.display = "none";
+    //         checkIn.style.display = "none";
+    //         remind.style.display = "none";
+    //     }
+
+    //     records.forEach(function(rec){
+    //         rec.addEventListener('click',function(){
+    //             recId = parseInt(rec.dataset.id);
+    //             let recIdoff = parseInt(rec.dataset.id)-1;
+    //             document.getElementById("modalId").textContent = recId;
+    //             document.getElementById("modalStatus").textContent = equipBookings[recIdoff].status.toUpperCase();
+    //             document.getElementById("modalUser").textContent = userLookup[equipBookings[recIdoff].fk_user_id];
+    //             document.getElementById("modalCreated").textContent = new Date(equipBookings[recIdoff].created).toISOString().split('T')[0];
+    //             document.getElementById("modalPeriod").textContent = new Date(equipBookings[recIdoff].loan_start_date).toISOString().split('T')[0] 
+    //             + " - " + new Date(equipBookings[recIdoff].loan_end_date).toISOString().split('T')[0];
+
+    //             const items = loanItems[recId];
+    //             console.log("Current recId:", recId);
+    //             if (items) {
+    //                 let itemList = [];
+    //                 for (const [typeId, quantity] of Object.entries(items)) {
+    //                     const itemName = typeLookup[typeId] || `Item #${typeId}`;
+    //                     itemList.push(`${itemName} x${quantity}`);
+    //                 }
+    //                 document.getElementById("modalItems").textContent = itemList.join(" | ");
+    //             } else {
+    //                 document.getElementById("modalItems").textContent = "None";
+    //             }
+
+    //             document.getElementById("modalReason").textContent = equipBookings[recIdoff].student_loan_reason;
+    //             if (equipBookings[recIdoff].student_extra_notes){
+    //                 document.getElementById("modalNotes").textContent = equipBookings[recIdoff].student_extra_notes;
+    //             } else{
+    //                 document.getElementById("modalNotes").textContent = "No notes";
+    //             }
+    //             modal.style.display = "flex";
+
+    //             if (equipBookings[recIdoff].status == "pending"){
+    //                 pendingButtons();
+                    
+    //             } else if (equipBookings[recIdoff].status == "confirmed"){
+    //                 confirmedButtons()
+                    
+    //             } else if (equipBookings[recIdoff].status == "overdue"){
+    //                 overdueButtons();
+    //             } else{
+    //                 noButtons();
+    //             };
+    //         });
+
+    //     });
+
+    //     function updateLoanStatus(id, newStatus) {
+    //         fetch('/update_loan_status', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify({
+    //                 loan_id: id,
+    //                 new_status: newStatus
+    //             })
+    //         })
+
+    //         .then(response => response.json())
+    //             .then(data => {
+    //                 console.log('Success:', data);
+    //                 equipBookings[id-1].status = newStatus;
+    //                 document.getElementById("modalStatus").textContent = newStatus.toUpperCase();
+    //                 let statusSpan = document.querySelector('.record[data-id="' + id + '"] .status')
+    //                 statusSpan.textContent = newStatus;
+    //                 for (const attribute of Array.from(statusSpan.classList)){
+    //                     if (attribute.startsWith("status-") == true){
+    //                         statusSpan.classList.remove(attribute);
+    //                     }
+    //                 }
+    //                 statusSpan.classList.add("status-"+newStatus);
+    //                 if (newStatus == 'confirmed'){
+    //                     alert("Booking #"+id+" has been approved.")
+    //                     confirmedButtons();
+    //                 } else if (newStatus == "rejected"){
+    //                     alert("Booking #"+id+" has been rejected.")
+    //                     noButtons();
+    //                 } else if (newStatus == "canceled"){
+    //                     alert("Booking #"+id+" has been cancelled.")
+    //                     noButtons();
+    //                 }
+                    
+    //             })
+    //             .catch(error => {
+    //                 console.error('Error:', error);
+    //             });       
+    //             }
+
+    //     approve.addEventListener('click', function(){
+    //         updateLoanStatus(recId,'confirmed')
+    //     });
+
+    //     reject.addEventListener('click', function(){
+    //         updateLoanStatus(recId,'rejected')
+    //     });
+
+    //     cancel.addEventListener('click', function(){
+    //         updateLoanStatus(recId,'canceled')
+    //     });
+
+    //     document.getElementById("equipSearch").addEventListener('keyup',function(){
+    //         var input, filter, table, tr, tds, i, txtValue,match;
+    //         input = document.getElementById("equipSearch");
+    //         filter = input.value.toUpperCase();
+    //         table = document.getElementById("equipTable");
+    //         tr = table.getElementsByTagName("tr");
+
+    //          for (i = 1; i < tr.length; i++) {
+    //             tds = tr[i].getElementsByTagName("td");
+    //             match = false;
+    //             for(j = 0; j<tds.length; j++){
+    //                 txtValue = tds[j].textContent || tds[j].innerText;
+    //                 if (txtValue.toUpperCase().indexOf(filter) > -1) {
+    //                     match = true;
+    //                     break;
+    //                 }
+    //             };
+    //             if (match) {
+    //                 tr[i].style.display = "";
+    //             } else {
+    //                 tr[i].style.display = "none";
+    //             }
+    
+    //         }
+
+    //     });
+
+        
+
+        
+
+
+
+    //     span.addEventListener('click',function(){
+    //         modal.style.display = "none";
+    //     });
+
+    //     window.onclick = function(event) {
+    //         if (event.target == modal) {
+    //             modal.style.display = "none";
+    //         }
+    //     }
+
+
+    // </script>
+
+
+
+{% endblock %}

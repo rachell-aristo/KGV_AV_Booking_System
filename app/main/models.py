@@ -200,6 +200,19 @@ class StudioBooking(db.Model):
     setup_selections = db.relationship('StudioBookingSetupSelection', back_populates='studio_booking')
     created = db.Column(db.DateTime, nullable=False)
 
+    def to_dict(self):
+            return {
+                "id": self.id,
+                "booking_date": self.studio_booking_date,
+                "status" : self.studio_booking_status,
+                "student_studio_booking_reason" : self.student_studio_booking_reason,
+                "student_studio_booking_notes" : self.student_studio_booking_notes,
+                "fk_user_id" : self.fk_user_id,
+                "fk_slot_id" : self.fk_slot_id,
+                "fk_studio_space_id" : self.fk_studio_space_id,
+                "admin_reject_reason" : self.admin_reject_reason,
+                "created" : self.created
+            }
 
     def __repr__(self):
             return f'<StudioBooking {self.studio_booking_date} {self.studio_space}>'

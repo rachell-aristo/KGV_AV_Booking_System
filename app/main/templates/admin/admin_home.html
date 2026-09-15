@@ -24,24 +24,63 @@
         <h1>Assets</h1>
 
     </div>
+        <div class="tabcontent active" data-page = "booking" id="booking" style = "display: none">
+            <div class = "filter-container">
+                <h1>Equipment Bookings</h1>
+                <div class="panel panel-primary filterable">
+                <div><button id="filter-btn">Filter</button></div>
+                <table id = "equipTable">
+                    <tr class = "filters" style="display: none;">
+                        <th><input type="text" placeholder="Booking ID" disabled></th>
+                        <th><input type="text" placeholder="User" disabled></th>
+                        <th><input type="text" placeholder="Request Date" disabled></th>
+                        <th><input type="text" placeholder="Loan Period" disabled></th>
+                        <th><input type="text" placeholder="Status" disabled></th>
+                    </tr>
+                    <tr class = "headings">
+                        <th>Booking ID</th>
+                        <th>User</th>
+                        <th>Request Date</th>
+                        <th>Loan Period</th>
+                        <th>Status</th>
+                    </tr>
+                    <tbody id="table-body">
+                        {% for record in equip_bookings %}
+                            <tr class = "record" data-id = "{{record.id}}">
+                                <td>{{record.id}}</td>
+                                <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
+                                <td>{{record.created.strftime("%b %d, %Y")}}</td>
+                                <td>{{record.loan_start_date.strftime("%b %d, %Y")}} - {{record.loan_end_date.strftime("%b %d, %Y")}}</td>
+                                <td>
+                                    <span class="status status-{{ record.status.value | lower }}">
+                                        {{ record.status.value | upper }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tr id="no-result" class="no-result" style="display: none;"><td colspan="4">No result found</td></tr>
+                </table>     
+            </div>
+        </div>
 
-    <div class="tabcontent active" data-page = "booking" id="booking" style = "display: none">
-        <h1>Bookings</h1>
+        <h1>Studio Bookings</h1>
         <table>
             <tr>
                 <th>Booking ID</th>
                 <th>User</th>
-                <th>Request Date</th>
-                <!-- <th>Items</th> -->
-                <th>Loan Period</th>
+                <th>Studio Space</th>
+                <th>Slot</th>
+                <th>Booked Date</th>
                 <th>Status</th>
             </tr>
-            {% for record in equip_bookings %}
-                <tr class = "record" data-id = "{{record.id}}">
+            {% for record in s_studio_bookings %}
+                <tr class = "studioRecord" data-id = "{{record.id}}">
                     <td>{{record.id}}</td>
                     <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
-                    <td>{{record.created.strftime("%b %d, %Y")}}</td>
-                    <td>{{record.loan_start_date.strftime("%b %d, %Y")}} - {{record.loan_end_date.strftime("%b %d, %Y")}}</td>
+                    <td>{{record.fk_studio_space_id}}</td>
+                    <td>{{record.fk_slot_id}}</td>
+                    <td>{{record.booking_date.strftime("%b %d, %Y")}}</td>
                     <td>
                         <span class="status status-{{ record.status.value | lower }}">
                             {{ record.status.value | upper }}
@@ -91,9 +130,62 @@
 
     <script>
         const equipBookings = {{ s_equip_bookings | tojson | safe }};
+        const studioBookings = {{ s_studio_bookings | tojson | safe }};
         const userLookup = {{ user_lookup | tojson | safe }};
         const loanItems = {{ loan_items | tojson | safe }};
         const typeLookup = {{ type_lookup | tojson | safe }};
+        console.log(studioBookings)
+
+        const filterBtn = document.getElementById('filter-btn');
+        const inputs = Array.from(document.querySelectorAll('.filters input'));
+        const rows = Array.from(document.querySelectorAll('#table-body tr:not(#no-result)'));
+        const noResult = document.getElementById('no-result');
+        // Toggle button click logic
+        filterBtn.addEventListener('click', () => {
+            const isDisabled = inputs[0].disabled;
+            document.querySelector(".filters").style.display = ""
+            document.querySelector(".headings").style.display = "none"
+            
+            inputs.forEach(input => {
+                input.disabled = !isDisabled;
+                input.value = '';
+            });
+            
+            rows.forEach(row => row.style.display = '');
+            noResult.style.display = 'none';
+
+            if (isDisabled) {
+                inputs[0].focus();
+            } else{
+                document.querySelector(".filters").style.display = "none"
+                document.querySelector(".headings").style.display = ""
+            }
+        });
+        // Filtering logic on input change
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                let hiddenRowsCount = 0;
+                console.log(rows)
+                rows.forEach(row => {
+                    // Check if row satisfies every search input
+                    const isMatch = inputs.every((inp, colIndex) => {
+                        const query = inp.value.toLowerCase().trim();
+                        if (!query) return true;
+                        const cellText = row.children[colIndex].textContent.toLowerCase();
+                        return cellText.includes(query);
+
+                    });
+                    if (isMatch) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                        hiddenRowsCount++;
+                    }
+                });
+                noResult.style.display = (hiddenRowsCount === rows.length) ? 'table-row' : 'none';
+            });
+        });
+            
 
         const tablinks = document.querySelectorAll(".tablinks");
         tablinks.forEach(function(tab){
@@ -248,18 +340,46 @@
                 });       
                 }
 
+        function send_mail(action,id){
+            const targetUrl = "/send_mail"
+            fetch(targetUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "action": action,
+                    "id": id
+                })
+            })
+            .then(response => {
+                // Check if the server responded with a success status code (200-299)
+                return response.json(); // Parse the JSON data from Flask
+            })
+            .then(data => {
+                console.log(data)
+            }) //def need to add some more error handling for email
+        }
+
         approve.addEventListener('click', function(){
             updateLoanStatus(recId,'confirmed')
+            send_mail("approve",recId)
         });
 
         reject.addEventListener('click', function(){
             updateLoanStatus(recId,'rejected')
+            send_mail("reject",recId)
         });
 
         cancel.addEventListener('click', function(){
             updateLoanStatus(recId,'canceled')
+            send_mail("cancel",recId)
         });
-            
+
+        remind.addEventListener('click', function(){
+            send_mail("remind",recId)
+            alert("Reminder sent!") //add a count of reminders sent or smth here 
+        });
 
         
 
@@ -275,7 +395,7 @@
             if (event.target == modal) {
                 modal.style.display = "none";
             }
-}
+        }
 
 
     </script>

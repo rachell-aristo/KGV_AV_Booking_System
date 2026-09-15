@@ -879,3 +879,25 @@ td {
   font-weight: 600;
   color: var(--purple-900);
 }
+
+/* -------------------------- Disabled State -------------------------- */
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none; /* Prevents all clicks, hover states, and input focus */
+  user-select: none;    /* Prevents highlighting text inside */
+  cursor: not-allowed;
+  filter: grayscale(25%); /* Optional visual cue */
+}
+
+/* Optional styling for the "Pick a date first" notice badge */
+.disabled-notice {
+  display: inline-block;
+  background-color: var(--navy-700);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+}

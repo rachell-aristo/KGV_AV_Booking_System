@@ -2,19 +2,28 @@ from flask import Flask, render_template, session, redirect, url_for
 from flask_login import current_user, login_required
 from dotenv import load_dotenv
 import os
-from extensions import db
+from extensions import db, mail
 from models import *
 from auth import auth, oauth, login_manager #these lines loads blueprints so they can be registered
 from studio_booking import studio_booking
 from student_home import student_home
 from equipment_booking import equip_booking
 from admin.admin_home import admin_home
+ 
 load_dotenv() #loads values from .env file into here so can access
 
 app = Flask(__name__) #Creates this file as a Flask application
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL') #sets the app's values to the things in .env so not hard coded
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config["SESSION_PERMANENT"] = False #Sessions expire when the browser is closed
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = os.getenv("DEL_EMAIL")
+app.config['MAIL_PASSWORD'] = os.getenv("EMAIL_PASSWORD")
+app.config['MAIL_USE_SSL'] = True
+mail.init_app(app)
+
 
 @app.route('/') #what happens on index main page
 def index():

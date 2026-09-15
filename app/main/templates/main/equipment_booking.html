@@ -34,53 +34,41 @@
                <input placeholder = "mm/dd/yy" type = "date" id="loan-period" min="" required>
                <input id="loan-start-date" type="hidden" name="loan-start-date">
                <input id="loan-end-date" type="hidden" name="loan-end-date">
+         <span class = "disabled-notice" style = "display: block">Pick a date first</span>
+         <div class = "disabled" style = "display: block">
+            <div class = "tab">
+               {% for i in equipment_category %}
+                  <button 
+                     class="tablinks {% if loop.first %}active{% endif %}"
+                     type = "button"
+                     data-cat-id= "{{ i.id }}"> 
+                     {{i.name}}
+                  </button>
+               {% endfor %}
+            </div>
 
-         <div class = "tab">
-            {% for i in equipment_category %}
-               <button 
-                  class="tablinks {% if loop.first %}active{% endif %}"
-                  type = "button"
-                  data-cat-id= "{{ i.id }}"> 
-                  {{i.name}}
-               </button>
+            <!-- Tab content -->
+            
+            {% for cat in equipment_category %}
+               <div data-cat-id="{{ cat.id }}" class="tabcontent" {% if loop.first %}style="display: block;"{% else %}style="display: none;"{% endif %}>            <div class="cards-grid">
+                     {% for i in equipment_types %}
+                        {% if i.fk_equipment_category_id | int == cat.id | int %}
+                           <div class="equip-card" data-equip-id="{{ i.id }}"> 
+                              <img src="{{ url_for('static', filename=i.image) }}" alt="{{ i.name }}">
+                              <div class="container" data-id = "{{i.id}}">
+                                 <h4><b>{{ i.name }}</b></h4>
+                                 <label for="quantity">Quantity:</label>
+                                 <select class="quantity-select" style="display: none;" data-id = "{{i.id}}">
+                                       <!-- options get filled in by JS -->
+                                 </select>
+                              </div>
+                           </div>
+                        {% endif %}
+                     {% endfor %}
+                  </div>
+               </div>
             {% endfor %}
          </div>
-
-         <!-- Tab content -->
-         {% for cat in equipment_category %}
-            <div data-cat-id="{{ cat.id }}" class="tabcontent" {% if loop.first %}style="display: block;"{% else %}style="display: none;"{% endif %}>            <div class="cards-grid">
-                  {% for i in equipment_types %}
-                     {% if i.fk_equipment_category_id | int == cat.id | int %}
-                        <div class="equip-card" data-equip-id="{{ i.id }}"> 
-                           <img src="{{ url_for('static', filename=i.image) }}" alt="{{ i.name }}">
-                           <div class="container">
-                              <h4><b>{{ i.name }}</b></h4>
-                                 {% if i.descript != "None" %}
-                                    <p>{{ i.descript }}</p> 
-                                 {% endif %}
-                                 {% if equipment_avail_quantity_list[equipment_types.index(i)] == 0 %}
-                                    <p>Unavaliable</p> 
-                                    <!-- add a thing where it says when it will be returned -->
-                                 {% elif equipment_avail_quantity_list[equipment_types.index(i)] == 'OFF_LIMITS' %}
-                                    <p>Unavaliable for your year group</p>
-                                 {% else %}
-                                    <label for="quantity">Quantity:</label>
-                                    <select name= "quantity" id="quantity">
-                                       {% for j in range((equipment_avail_quantity_list[equipment_types.index(i)] | int)+1) %}
-                                          <option name = "{{equipment_types.index(i)}}-quantity" value="{{j}}">{{j}}</option>
-                                       {% endfor %}
-                                    </select>
-                                 {% endif %}
-                                 
-                              
-                              <!-- add validation, if descript is none don't show it -->
-                           </div>
-                        </div>
-                     {% endif %}
-                  {% endfor %}
-               </div>
-            </div>
-         {% endfor %}
          <input type="hidden" id="selected-equip" name="selected-equip">
          <input type="hidden" id="selected-quants" name="selected-quants">
 

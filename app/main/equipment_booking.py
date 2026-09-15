@@ -30,26 +30,46 @@ def data_fetch():
         if i.status == LoanStatus.OVERDUE:
             overdue_loans.append(i)
     
-    for item in equipment_types:
-        equipment_id_list.append(item.id)
-        unavail = 0
-        if item.min_year_group > current_user.year_group:
-            equip_avail_quantity_list.append('OFF_LIMITS') 
-            #if equipment is not permitted for their year group
-        else:
-            for i in db.session.execute(select(Asset).where(Asset.fk_equipment_type_id == item.id)).scalars():
-                if i.status != AssetStatus.AVAILABLE:
-                    unavail += 1 #count up all assets in this category that are unavaliable 
-                    print("unavail:",unavail)
-            if ((item.quantity)-unavail) > item.loan_limit_quantity:
-                equip_avail_quantity_list.append(item.loan_limit_quantity)
-            else:
-                equip_avail_quantity_list.append((item.quantity)-unavail)
+
+    print(equip_avail_quantity_list)
     
     return render_template("main/equipment_booking.html", equipment_types = equipment_types, fully_booked_days = fully_booked_days,
-    equipment_id_list = equipment_id_list, equipment_avail_quantity_list = equip_avail_quantity_list,
     equipment_category = equipment_category, overdue_loans = overdue_loans, booking_counts = booking_counts,
     equip_type_lookup = type_lookup)
+
+@equip_booking.route('/get_available_equipment', methods=['POST'])
+@login_required
+def get_available_equipment():
+    data = request.json
+    new_loan_start_date = datetime.fromisoformat(data.get('loan_start_date')).date()
+    newloan_end_date = datetime.fromisoformat(data.get('loan_end_date')).date()
+
+    equipment_types = db.session.execute(select(EquipmentType)).scalars().all() #Sets all equipment types to var
+    updated_quantity_dict = {}
+
+    for item in equipment_types:
+        if item.min_year_group > current_user.year_group:
+            updated_quantity = 'OFF_LIMITS'
+             #if equipment is not permitted for their year group
+        else:
+            unavail = 0
+            stmt = db.session.execute(select(EquipmentLoan)
+            .where(EquipmentLoan.status.in_([LoanStatus.CONFIRMED, LoanStatus.PENDING])))
+            for loan in stmt.scalars().all():
+                for loanitem in db.session.execute(select(EquipmentLoanItem)
+                .where(EquipmentLoanItem.fk_loan_id == loan.id, 
+                EquipmentLoanItem.fk_equipment_type_id == item.id)).scalars().all():
+                    if loan.loan_end_date >= new_loan_start_date and newloan_end_date >= loan.loan_start_date:
+                        unavail += 1 #count up all assets in this category that are unavaliable 
+            if ((item.quantity)-unavail) > item.loan_limit_quantity:
+                updated_quantity = item.loan_limit_quantity
+            else:
+                updated_quantity = item.quantity-unavail
+        updated_quantity_dict[item.id] = updated_quantity
+    print(updated_quantity_dict)
+    return jsonify(updated_quantity_dict)
+
+
 
 @equip_booking.route('/submit_equip_booking', methods=['POST']) #using POST method so submitted data is not publicly shown in URL
 @login_required

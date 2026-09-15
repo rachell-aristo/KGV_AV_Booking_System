@@ -3,15 +3,16 @@
 import pandas as pd
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
 from flask_login import current_user
-from app.main.extensions import db
-from app.main.models import User, UserRole, Asset, EquipmentLoanItem, AssetStatus, EquipmentType, EquipmentCategory
+from extensions import db
+from models import User, UserRole, Asset, EquipmentLoanItem, AssetStatus, EquipmentType, EquipmentCategory
 from flask_login import login_required
 from sqlalchemy import select, update
-from app.main.app import app
+from app import app
 from datetime import datetime
+from pathlib import Path
 
-
-df = pd.read_csv('harder_test.csv')
+csv_path = Path(__file__).resolve().parent / "harder_test.csv"
+df = pd.read_csv(csv_path)
 df.drop(df.query('`Item ID`.isnull() | `Item Name`.isnull()').index, inplace = True) #you should add error message here when this happens so user knows
 #remove bad data with empty space
 df['Status'] = df['Status'].map(lambda x: AssetStatus(x.lower().strip()) if pd.notna(x) else None) 

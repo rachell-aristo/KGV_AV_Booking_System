@@ -9,30 +9,77 @@ const fp = flatpickr("#loan-period", {
     altFormat: "F j, Y", 
     dateFormat: "Y-m-d",
     onChange: function(selectedDates, dateStr, instance) {
-    // Check if both dates are selected
-    if (selectedDates.length === 2) {
-        const startDate = selectedDates[0]; // JS Date Object
-        const endDate = selectedDates[1];   // JS Date Object
+        // Check if both dates are selected
+        if (selectedDates.length === 2) {
+            const startDate = selectedDates[0]; // JS Date Object
+            const endDate = selectedDates[1];   // JS Date Object
 
-        // To get them as formatted strings, use the built-in instance formatter:
-        const startDateStr = instance.formatDate(startDate, "Y-m-d");
-        const endDateStr = instance.formatDate(endDate, "Y-m-d");
-        let timeDifference = endDate - startDate;
-        let daysDifference = timeDifference / (1000 * 3600 * 24); //not including today
+            // To get them as formatted strings, use the built-in instance formatter:
+            const startDateStr = instance.formatDate(startDate, "Y-m-d");
+            const endDateStr = instance.formatDate(endDate, "Y-m-d");
+            let timeDifference = endDate - startDate;
+            let daysDifference = timeDifference / (1000 * 3600 * 24); //not including today
 
-        //validation check
-        if (daysDifference > 3){
-            alert("Maximum 3 days allowed! If you need to make a special request, please make note of it in the 'Extra notes' box")
-            fp.clear()
+            //validation check
+            if (daysDifference <= 3){
+                document.querySelector("div.disabled")?.classList.remove("disabled");
+                document.querySelector(".disabled-notice").style.display = "none";
+            } else{
+                alert("Maximum 3 days allowed! If you need to make a special request, please make note of it in the 'Extra notes' box")
+                fp.clear()
+            }
+            
+            // add verification that start date cannot be weekend
+            // block bookings for today
+            document.getElementById('loan-start-date').value = startDateStr;
+            document.getElementById('loan-end-date').value = endDateStr;
+
+            fetch('/get_available_equipment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    loan_start_date: startDateStr,
+                    loan_end_date: endDateStr
+                })
+            })
+
+            .then(response => response.json())
+            .then(data => {
+                let updated_quantity_dict = data
+                console.log('Success:', updated_quantity_dict);
+                let selectElements = document.querySelectorAll(".quantity-select")
+                for (const [type, quantity] of Object.entries(updated_quantity_dict)){
+                    if (quantity == "OFF_LIMITS"){
+                        let offLimits = document.createElement('div')
+                        offLimits.textContent = 'Not available for your year group';
+                        offLimits.style.display = "block"
+                        offLimits.className = "off-limits-msg"
+                        document.querySelectorAll(".container").forEach(function(card){
+                            if (card.dataset.equipId == type){
+                                card.appendChild(offLimits);
+                            }
+                        }); // FIX THiS LATER & ADD MESSGA FOR FULLY BOOKED
+                         // <p class="unavailable-msg" style="display: none;">Fully booked for these dates</p>
+                    }
+                    selectElements.forEach(function(select) {
+                        if (select.dataset.id == type){
+                            select.innerHTML = "";
+                            select.style.display = "block"
+                            for (let i = 0; i < quantity+1;i++){
+                                select.add(new Option(String(i),i))
+                            }
+                            
+                        }
+                    })
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            })
         }
-        document.getElementById('loan-start-date').value = startDateStr;
-        document.getElementById('loan-end-date').value = endDateStr;
-
-        console.log("Start Date:", startDate);
-        console.log("End Date:", endDate);
-        console.log("diff:", daysDifference);    
-    }
-    }
+    }   
 });
 
 const tablinks = document.querySelectorAll(".tablinks");
@@ -58,7 +105,7 @@ tablinks.forEach(function(tab){
 selectedEquip = []; //list of ids
 quants = [] //parallel list with quantities
 
-const equipQuants = document.querySelectorAll("#quantity");
+const equipQuants = document.querySelectorAll(".quantity-select");
 equipQuants.forEach(function(select){
     select.addEventListener('change',function(){ //when a quantity drop down's value is changed
     equipId = parseInt(select.closest('[data-equip-id]').dataset.equipId)
