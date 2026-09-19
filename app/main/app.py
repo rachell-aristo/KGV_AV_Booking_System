@@ -2,13 +2,23 @@ from flask import Flask, render_template, session, redirect, url_for
 from flask_login import current_user, login_required
 from dotenv import load_dotenv
 import os
-from extensions import db, mail
-from models import *
-from auth import auth, oauth, login_manager #these lines loads blueprints so they can be registered
-from studio_booking import studio_booking
-from student_home import student_home
-from equipment_booking import equip_booking
-from admin.admin_home import admin_home
+from app.main.extensions import db, mail
+from app.main.models import *
+from app.main.auth import auth, oauth, login_manager #these lines loads blueprints so they can be registered
+from app.main.studio_booking import studio_booking
+from app.main.student_home import student_home
+from app.main.equipment_booking import equip_booking
+from app.main.admin.admin_home import admin_home
+
+
+# from extensions import db, mail
+# from models import *
+# from auth import auth, oauth, login_manager #these lines loads blueprints so they can be registered
+# from studio_booking import studio_booking
+# from student_home import student_home
+# from equipment_booking import equip_booking
+# from admin.admin_home import admin_home
+
  
 load_dotenv() #loads values from .env file into here so can access
 

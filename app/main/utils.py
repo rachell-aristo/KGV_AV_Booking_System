@@ -1,6 +1,8 @@
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
-from extensions import db
-from models import EquipmentType, LoanStatus, EquipmentLoanItem, StudioBooking,StudioBookingStatus, EquipmentLoan
+from .extensions import db
+from .models import EquipmentType,EquipmentLoanItem
+# from extensions import db
+# from models import EquipmentType,EquipmentLoanItem
 from flask_login import login_required, current_user
 from sqlalchemy import select
 from collections import Counter

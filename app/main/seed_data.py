@@ -1,7 +1,9 @@
 #seed code to set TimeSlot and SetUp for studio booking if not already there
-from app import app
-from extensions import db
-from models import StudioSetupOptions, StudioSpace, TimeSlot, User, UserRole
+from .app import app
+from .extensions import db
+from .models import StudioSetupOptions, StudioSpace, TimeSlot, User, UserRole
+# from extensions import db
+# from models import StudioSetupOptions, StudioSpace, TimeSlot, User, UserRole
 from datetime import time
 from sqlalchemy import select
 from datetime import datetime

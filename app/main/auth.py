@@ -2,8 +2,10 @@ from flask import Blueprint, redirect, url_for, session, request, abort
 from flask_login import LoginManager, login_required, logout_user, login_user
 from urllib.parse import urljoin, urlparse
 from authlib.integrations.flask_client import OAuth
-from extensions import db
-from models import User, UserRole
+from .extensions import db
+from .models import User, UserRole
+# from extensions import db
+# from models import User, UserRole
 from functools import wraps #decorator useful for creating decorator 
 from sqlalchemy import select
 import os

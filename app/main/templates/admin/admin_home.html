@@ -3,6 +3,7 @@
 {% block content %}
     <!-- <div id="data-store" data-equip-bookings="{{ s_equip_bookings | tojson }}"></div> -->
 
+    <!-- TAB CATEGORIES -->
     <div class="tab-container">
         <div class="tab">
             <button class="tablinks active" data-tab="dashboard" >Dashboard</button>
@@ -12,24 +13,26 @@
         </div>
     </div>
 
+    <!-- DASHBOARD CONTENT -->
     <div class="tabcontent active" data-page = "dashboard" id="dashboard"  style = "display: block">
         <h1>Dashboard</h1>
         <h2>Today's bookings</h2>
         <h2>New bookings</h2>
-
         <h2>Overdue loans</h2>
     </div>
 
+    <!-- ASSETS CONTENT -->
     <div class="tabcontent active" data-page = "assets" id="assets" style = "display: none">
         <h1>Assets</h1>
-
     </div>
-        <div class="tabcontent active" data-page = "booking" id="booking" style = "display: none">
-            <div class = "filter-container">
-                <h1>Equipment Bookings</h1>
-                <div class="panel panel-primary filterable">
-                <div><button id="filter-btn">Filter</button></div>
+    <!-- BOOKING CONTENT -->
+    <div class="tabcontent active" data-page = "booking" id="booking" style = "display: none">
+        <div class = "filter-container">
+            <h1>Equipment Bookings</h1>
+            <div class="panel panel-primary filterable">
+                <div><button class="filter-btn">Filter</button></div>
                 <table id = "equipTable">
+                    <!-- FILTER BUTTONS EQUIPMENT TABLE -->
                     <tr class = "filters" style="display: none;">
                         <th><input type="text" placeholder="Booking ID" disabled></th>
                         <th><input type="text" placeholder="User" disabled></th>
@@ -44,9 +47,10 @@
                         <th>Loan Period</th>
                         <th>Status</th>
                     </tr>
-                    <tbody id="table-body">
+                    <!-- EQUIPMENT TABLE RECORDS -->
+                    <tbody id="equip-table-body">
                         {% for record in equip_bookings %}
-                            <tr class = "record" data-id = "{{record.id}}">
+                            <tr class = "equipRecord" data-id = "{{record.id}}">
                                 <td>{{record.id}}</td>
                                 <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
                                 <td>{{record.created.strftime("%b %d, %Y")}}</td>
@@ -59,41 +63,88 @@
                             </tr>
                         {% endfor %}
                     </tbody>
-                    <tr id="no-result" class="no-result" style="display: none;"><td colspan="4">No result found</td></tr>
+                    <tr class="no-result" style="display: none;"><td colspan="5">No result found</td></tr>
                 </table>     
             </div>
         </div>
+    <!-- STUDIO BOOKING TABLE -->
+        <div class = "filter-container">
+            <h1>Studio Bookings</h1>
+            <div class="panel panel-primary filterable">
+                <div><button class="filter-btn">Filter</button></div>
+                <table id = "studioTable">
+                    <!-- FILTER BUTTONS STUDIO TABLE -->
+                    <tr class = "filters" style="display: none;">
+                        <th><input type="text" placeholder="Booking ID" disabled></th>
+                        <th><input type="text" placeholder="User" disabled></th>
+                        <th><input type="text" placeholder="Studio Space" disabled></th>
+                        <th><input type="text" placeholder="Slot" disabled></th>
+                        <th><input type="text" placeholder="Booked Date" disabled></th>
+                        <th><input type="text" placeholder="Status" disabled></th>
+                    </tr>
+                    <tr class = "headings">
+                        <th>Booking ID</th>
+                        <th>User</th>
+                        <th>Studio Space</th>
+                        <th>Slot</th>
+                        <th>Booked Date</th>
+                        <th>Status</th>
+                    </tr>
+                    <!-- STUDIO TABLE RECORDS -->
+                    <tbody id="studio-table-body">
+                        {% for record in s_studio_bookings %}
+                            <tr class = "studioRecord" data-id = "{{record.id}}">
+                                <td>{{record.id}}</td>
+                                <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
+                                <td>{{studio_lookup.get(record.fk_studio_space_id,'Unknown Space')}}</td>
+                                <td>{{slot_lookup.get(record.fk_slot_id,"Unknown Timeslot")}}</td>
+                                <td>{{record.booking_date.strftime("%b %d, %Y")}}</td>
+                                <td>
+                                    <span class="status status-{{ record.status.value | lower }}">
+                                        {{ record.status.value | upper }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tr class="no-result" style="display: none;"><td colspan="6">No result found</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
 
-        <h1>Studio Bookings</h1>
-        <table>
-            <tr>
-                <th>Booking ID</th>
-                <th>User</th>
-                <th>Studio Space</th>
-                <th>Slot</th>
-                <th>Booked Date</th>
-                <th>Status</th>
-            </tr>
-            {% for record in s_studio_bookings %}
-                <tr class = "studioRecord" data-id = "{{record.id}}">
-                    <td>{{record.id}}</td>
-                    <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
-                    <td>{{record.fk_studio_space_id}}</td>
-                    <td>{{record.fk_slot_id}}</td>
-                    <td>{{record.booking_date.strftime("%b %d, %Y")}}</td>
-                    <td>
-                        <span class="status status-{{ record.status.value | lower }}">
-                            {{ record.status.value | upper }}
-                        </span>
-                    </td>
-                </tr>
-            {% endfor %}
-        </table>
-
-        <div id="recordModal" class="modal">
+        <!-- STUDIO RECORD MODAL -->
+        <div id="studioModal" class="modal">
             <div class="modal-content" >
                 <div class = "modal-body">
-                    <span class="close">&times;</span>
+                    <span class = "close"  id="studioClose">&times;</span>
+                    <h1><span class="label">ID: #</span> <span id="modalId"></span></h1>
+                    <p><span class="label">Status:</span> <span id="modalStatus"></span></p>
+                    <p><span class="label">Requested by:</span> <span id="modalUser"></span></p>
+                    <p><span class="label">Requested on:</span> <span id="modalCreated"></span></p>
+                    <p><span class="label">Booking reason:</span> <span id="modalReason"></span></p>
+                    <p id="modalRejectRow" style="display: none;">
+                        <span class="label">Cancel reason:</span> 
+                        <span id="modalRejectReason"></span>
+                    </p>
+                    <p id="modalNotes"></p>
+                </div>
+                <div id = "studioTable" class="modal-actions">
+                    <button id = "approve" style = "display: none">Approve</button>
+                    <button id = "reject" style = "display: none">Reject</button>
+                    <!-- only appear if loan is not approved -->
+                    <button id = "checkIn" style = "display: none">Check in</button>
+                    <button id = "cancel" style = "display: none">Cancel</button>  
+                    <button id = "remind" style = "display: none">Remind</button> 
+                </div>
+            </div>
+        </div>
+
+        <!-- BOOKING RECORD MODAL -->
+        <div id="equipModal" class="modal">
+            <div class="modal-content" >
+                <div class = "modal-body">
+                    <span class = "close" id="equipClose">&times;</span>
                     <h1><span class="label">ID: #</span> <span id="modalId"></span></h1>
                     <p><span class="label">Status:</span> <span id="modalStatus"></span></p>
                     <p><span class="label">Requested by:</span> <span id="modalUser"></span></p>
@@ -101,9 +152,13 @@
                     <p><span class="label">Loan Period:</span> <span id="modalPeriod"></span></p>
                     <p><span class="label">Items:</span> <span id="modalItems"></span></p>
                     <p><span class="label">Booking reason:</span> <span id="modalReason"></span></p>
+                    <p id="modalRejectRow" style="display: none;">
+                        <span class="label">Cancel reason:</span> 
+                        <span id="modalRejectReason"></span>
+                    </p>
                     <p id="modalNotes"></p>
                 </div>
-                <div class="modal-actions">
+                <div id = "equipActions" class="modal-actions">
                     <button id = "approve" style = "display: none">Approve</button>
                     <button id = "reject" style = "display: none">Reject</button>
                     <!-- only appear if loan is not approved -->
@@ -115,11 +170,27 @@
         </div>
     </div>
 
+    <!-- REJECT REASON MODAL -->
+    <div id = "reject-modal" class = "modal">
+        <div class="modal-content modal-sm">
+            <span class="close" id="reject-modal-close">&times;</span>
+            <h2>Cancellation/rejection Reason</h2>
+            <div class="modal-body">
+                <label for="fname">Enter reason:</label>
+                <textarea required type = "text" id = "reject-reason" name = "reject-reason" placeholder = "Enter reject reason..." rows="3"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button id = "reject-done">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER TABLE -->
     <div class="tabcontent active" data-page = "students" id="students" style = "display: none">
         <h1>Students</h1>
         <div class = "filter-container">
             <div class="panel panel-primary filterable">
-            <div><button id="filter-btn">Filter</button></div>
+            <div><button class="filter-btn">Filter</button></div>
             <table id = "studentTable">
                 <tr class = "filters" style="display: none;">
                     <th><input type="text" placeholder="User" disabled></th>
@@ -135,7 +206,7 @@
                     <th>Role</th>
                     <th>Year Group</th>
                 </tr>
-                <tbody id="table-body">
+                <tbody id="user-table-body">
                     {% for user in s_users %}
                         <tr class = "user" data-id = "{{user.id}}">
                             <td>{{user.id}}</td>
@@ -146,79 +217,74 @@
                         </tr>
                     {% endfor %}
                 </tbody>
-                <tr id="no-result" class="no-result" style="display: none;"><td colspan="4">No result found</td></tr>
+                <tr class="no-result" style="display: none;"><td colspan="4">No result found</td></tr>
             </table>     
          </div>
     </div>
-
-
-
-
-
-
-
-
-
-
     <script>
         const equipBookings = {{ s_equip_bookings | tojson | safe }};
         const studioBookings = {{ s_studio_bookings | tojson | safe }};
         const userLookup = {{ user_lookup | tojson | safe }};
         const loanItems = {{ loan_items | tojson | safe }};
         const typeLookup = {{ type_lookup | tojson | safe }};
-        console.log(studioBookings)
 
-        const filterBtn = document.getElementById('filter-btn');
-        const inputs = Array.from(document.querySelectorAll('.filters input'));
-        const rows = Array.from(document.querySelectorAll('#table-body tr:not(#no-result)'));
-        const noResult = document.getElementById('no-result');
-        // Toggle button click logic
-        filterBtn.addEventListener('click', () => {
-            const isDisabled = inputs[0].disabled;
-            document.querySelector(".filters").style.display = ""
-            document.querySelector(".headings").style.display = "none"
-            
-            inputs.forEach(input => {
-                input.disabled = !isDisabled;
-                input.value = '';
-            });
-            
-            rows.forEach(row => row.style.display = '');
-            noResult.style.display = 'none';
 
-            if (isDisabled) {
-                inputs[0].focus();
-            } else{
-                document.querySelector(".filters").style.display = "none"
-                document.querySelector(".headings").style.display = ""
-            }
-        });
-        // Filtering logic on input change
-        inputs.forEach(input => {
-            input.addEventListener('input', () => {
-                let hiddenRowsCount = 0;
-                console.log(rows)
-                rows.forEach(row => {
-                    // Check if row satisfies every search input
-                    const isMatch = inputs.every((inp, colIndex) => {
-                        const query = inp.value.toLowerCase().trim();
-                        if (!query) return true;
-                        const cellText = row.children[colIndex].textContent.toLowerCase();
-                        return cellText.includes(query);
-
-                    });
-                    if (isMatch) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                        hiddenRowsCount++;
-                    }
+        document.querySelectorAll('.filter-container').forEach(container => {
+            const inputs = container.querySelectorAll('.filters input');
+            const rows = container.querySelectorAll('tbody tr:not(.no-result):not(.headings):not(.filters)');
+            const noResult = container.querySelector('.no-result');
+            const btn = container.querySelector('.filter-btn')
+            btn.addEventListener('click',()=>{
+                const isDisabled = inputs[0].disabled;
+                container.querySelector(".filters").style.display = ""
+                container.querySelector(".headings").style.display = "none"
+                
+                inputs.forEach(input => {
+                    input.disabled = !isDisabled;
+                    input.value = '';
                 });
-                noResult.style.display = (hiddenRowsCount === rows.length) ? 'table-row' : 'none';
+                
+                rows.forEach(row => row.style.display = '');
+                noResult.style.display = 'none';
+
+                if (isDisabled) {
+                    inputs[0].focus();
+                } else{
+                    container.querySelector(".filters").style.display = "none"
+                    container.querySelector(".headings").style.display = ""
+                }
+            })
+
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    let hiddenRowsCount = 0;
+                    rows.forEach(row => {
+                        // Check if row satisfies every search input
+                        const isMatch = Array.from(inputs).every((inp, colIndex) => {
+                            const query = inp.value.toLowerCase().trim();
+                            if (!query) return true;
+                            const cellText = row.children[colIndex].textContent.toLowerCase();
+                            return cellText.includes(query);
+
+                        });
+                        if (isMatch) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                            hiddenRowsCount++;
+                        }
+                    });
+                    noResult.style.display = (hiddenRowsCount === rows.length) ? 'table-row' : 'none';
+                });
             });
+        
         });
+
             
 
+        
+            
+        // Page categories
         const tablinks = document.querySelectorAll(".tablinks");
         tablinks.forEach(function(tab){
             tab.addEventListener('click',function(){ //when a tablink is clicked
@@ -239,98 +305,205 @@
             });
         });
 
-        // When modal is clicked
-        const records = document.querySelectorAll(".record");
-        var modal = document.getElementById("recordModal");
+        const equipRecords = document.querySelectorAll(".equipRecord");
+        const studioRecord = document.querySelectorAll(".studioRecord");
+        var equip_modal = document.getElementById("equipModal");
+        var studio_modal = document.getElementById("studioModal");
         var span = document.getElementsByClassName("close")[0];
         let recId;
+        let recIdObject;
+        let rejectType;
+        let cancelOrReject;
 
-        const approve = document.getElementById("approve");
-        const reject = document.getElementById("reject");
-        const cancel = document.getElementById("cancel");
-        const checkIn = document.getElementById("checkIn");
-        const remind = document.getElementById("remind");
+        //Modal buttons
+        const equipApprove = document.querySelector("#equipModal #approve");
+        const equipReject = document.querySelector("#equipModal #reject");
+        const equipCancel = document.querySelector("#equipModal #cancel");
+        const equipCheckIn = document.querySelector("#equipModal #checkIn");
+        const equipRemind = document.querySelector("#equipModal #remind");
 
-        function confirmedButtons(){
-            approve.style.display = "none";
-            reject.style.display = "none";
-            cancel.style.display = "block";
-            checkIn.style.display = "block";
-            remind.style.display = "none";
+        const studioApprove = document.querySelector("#studioModal #approve");
+        const studioReject = document.querySelector("#studioModal #reject");
+        const studioCancel = document.querySelector("#studioModal #cancel");
+        const studioCheckIn = document.querySelector("#studioModal #checkIn");
+        const studioRemind = document.querySelector("#studioModal #remind");
+
+        function confirmedButtons(type){
+            if (type == "EQUIP"){
+                equipApprove.style.display = "none";
+                equipReject.style.display = "none";
+                equipCancel.style.display = "block";
+                equipCheckIn.style.display = "block";
+                equipRemind.style.display = "none";
+            } else if (type == "STUDIO"){
+                studioApprove.style.display = "none";
+                studioReject.style.display = "none";
+                studioCancel.style.display = "block";
+                studioCheckIn.style.display = "block";
+                studioRemind.style.display = "none";
+            }
+            
         }
 
-        function pendingButtons(){
-            approve.style.display = "block";
-            reject.style.display = "block";
-            cancel.style.display = "none";
-            checkIn.style.display = "none";
-            remind.style.display = "none";
+        function pendingButtons(type){
+            if (type == "EQUIP"){
+                equipApprove.style.display = "block";
+                equipReject.style.display = "block";
+                equipCancel.style.display = "none";
+                equipCheckIn.style.display = "none";
+                equipRemind.style.display = "none";
+            } else if (type == "STUDIO"){
+                studioApprove.style.display = "block";
+                studioReject.style.display = "block";
+                studioCancel.style.display = "none";
+                studioCheckIn.style.display = "none";
+                studioRemind.style.display = "none";
+            }
         }
 
-        function overdueButtons(){
-            approve.style.display = "none";
-            reject.style.display = "none";
-            cancel.style.display = "none";
-            checkIn.style.display = "none";
-            remind.style.display = "block";
+        function overdueButtons(type){
+            if (type == "EQUIP"){
+                equipApprove.style.display = "none";
+                equipReject.style.display = "none";
+                equipCancel.style.display = "none";
+                equipCheckIn.style.display = "none";
+                equipRemind.style.display = "block";
+            } else if (type == "STUDIO"){
+                studioApprove.style.display = "none";
+                studioReject.style.display = "none";
+                studioCancel.style.display = "none";
+                studioCheckIn.style.display = "none";
+                studioRemind.style.display = "block";
+            }
         }
 
-        function noButtons(){
-            approve.style.display = "none";
-            reject.style.display = "none";
-            cancel.style.display = "none";
-            checkIn.style.display = "none";
-            remind.style.display = "none";
+        function noButtons(type){
+            if (type == "EQUIP"){
+                equipApprove.style.display = "none";
+                equipReject.style.display = "none";
+                equipCancel.style.display = "none";
+                equipCheckIn.style.display = "none";
+                equipRemind.style.display = "none";
+            } else if (type == "STUDIO"){
+                studioApprove.style.display = "none";
+                studioReject.style.display = "none";
+                studioCancel.style.display = "none";
+                studioCheckIn.style.display = "none";
+                studioRemind.style.display = "none";
+            }
         }
 
-        records.forEach(function(rec){
+        // Equipment record modal
+        equipRecords.forEach(function(rec){
             rec.addEventListener('click',function(){
                 recId = parseInt(rec.dataset.id);
-                let recIdoff = parseInt(rec.dataset.id)-1;
-                document.getElementById("modalId").textContent = recId;
-                document.getElementById("modalStatus").textContent = equipBookings[recIdoff].status.toUpperCase();
-                document.getElementById("modalUser").textContent = userLookup[equipBookings[recIdoff].fk_user_id];
-                document.getElementById("modalCreated").textContent = new Date(equipBookings[recIdoff].created).toISOString().split('T')[0];
-                document.getElementById("modalPeriod").textContent = new Date(equipBookings[recIdoff].loan_start_date).toISOString().split('T')[0] 
-                + " - " + new Date(equipBookings[recIdoff].loan_end_date).toISOString().split('T')[0];
+                recIdObject = equipBookings.find(loan => loan.id === recId);
+                document.querySelector("#equipModal #modalId").textContent = recId;
+                document.querySelector("#equipModal #modalStatus").textContent = recIdObject.status.toUpperCase();
+                document.querySelector("#equipModal #modalUser").textContent = userLookup[recIdObject.fk_user_id];
+                document.querySelector("#equipModal #modalCreated").textContent = new Date(recIdObject.created).toISOString().split('T')[0];
+                document.querySelector("#equipModal #modalPeriod").textContent = new Date(recIdObject.loan_start_date).toISOString().split('T')[0] 
+                + " - " + new Date(recIdObject.loan_end_date).toISOString().split('T')[0];
 
                 const items = loanItems[recId];
-                console.log("Current recId:", recId);
                 if (items) {
                     let itemList = [];
                     for (const [typeId, quantity] of Object.entries(items)) {
                         const itemName = typeLookup[typeId] || `Item #${typeId}`;
                         itemList.push(`${itemName} x${quantity}`);
                     }
-                    document.getElementById("modalItems").textContent = itemList.join(" | ");
+                    document.querySelector("#equipModal #modalItems").textContent = itemList.join(" | ");
                 } else {
-                    document.getElementById("modalItems").textContent = "None";
+                    document.querySelector("#equipModal #modalItems").textContent = "None";
                 }
 
-                document.getElementById("modalReason").textContent = equipBookings[recIdoff].student_loan_reason;
-                if (equipBookings[recIdoff].student_extra_notes){
-                    document.getElementById("modalNotes").textContent = equipBookings[recIdoff].student_extra_notes;
+                document.querySelector("#equipModal #modalReason").textContent = recIdObject.student_loan_reason;
+                if (recIdObject.student_extra_notes){
+                    document.querySelector("#equipModal #modalNotes").textContent = recIdObject.student_extra_notes;
                 } else{
-                    document.getElementById("modalNotes").textContent = "No notes";
+                    document.querySelector("#equipModal #modalNotes").textContent = "No student notes";
                 }
-                modal.style.display = "flex";
-
-                if (equipBookings[recIdoff].status == "pending"){
-                    pendingButtons();
-                    
-                } else if (equipBookings[recIdoff].status == "confirmed"){
-                    confirmedButtons()
-                    
-                } else if (equipBookings[recIdoff].status == "overdue"){
-                    overdueButtons();
+                if (recIdObject.admin_reject_reason){
+                    document.querySelector("#equipModal #modalRejectReason").textContent = recIdObject.admin_reject_reason;
+                    document.querySelector("#equipModal #modalRejectRow").style.display = "flex";
                 } else{
-                    noButtons();
+                    document.querySelector("#equipModal #modalRejectReason").value = "";
+                    document.querySelector("#equipModal #modalRejectRow").style.display = "none";
+                }
+
+                equip_modal.style.display = "flex";
+
+                if (recIdObject.status == "pending"){
+                    pendingButtons("EQUIP");
+                    
+                } else if (recIdObject.status == "confirmed"){
+                    confirmedButtons("EQUIP")
+                    
+                } else if (recIdObject.status == "overdue"){
+                    overdueButtons("EQUIP");
+                } else{
+                    noButtons("EQUIP");
                 };
             });
 
         });
 
-        function updateLoanStatus(id, newStatus) {
+        // Studio record model
+        studioRecord.forEach(function(rec){
+            rec.addEventListener('click',function(){
+                recId = parseInt(rec.dataset.id);
+                recIdObject = studioBookings.find(loan => loan.id === recId);
+                document.querySelector("#studioModal #modalId").textContent = recId;
+                document.querySelector("#studioModal #modalStatus").textContent = recIdObject.status.toUpperCase();
+                document.querySelector("#studioModal #modalUser").textContent = userLookup[recIdObject.fk_user_id];
+                document.querySelector("#studioModal #modalCreated").textContent = new Date(recIdObject.created).toISOString().split('T')[0];
+                document.querySelector("#studioModal #modalReason").textContent = recIdObject.student_studio_booking_reason;
+                if (recIdObject.student_studio_booking_notes){
+                    document.querySelector("#studioModal #modalNotes").textContent = recIdObject.student_studio_booking_notes;
+                } else{
+                    document.querySelector("#studioModal #modalNotes").textContent = "No student notes";
+                }
+                if (recIdObject.admin_reject_reason){
+                    document.querySelector("#studioModal #modalRejectReason").textContent = recIdObject.admin_reject_reason;
+                    document.querySelector("#studioModal #modalRejectRow").style.display = "flex";
+                } else{
+                    document.querySelector("#studioModal #modalRejectReason").value = "";
+                    document.querySelector("#studioModal #modalRejectRow").style.display = "none";
+                }
+
+                studio_modal.style.display = "flex";
+
+                if (recIdObject.status == "pending"){
+                    pendingButtons("STUDIO");
+                    
+                } else if (recIdObject.status == "confirmed"){
+                    confirmedButtons("STUDIO")
+                } else{
+                    noButtons("STUDIO");
+                };
+            });
+        });
+
+        //Close butons for equip and studio modals
+
+        document.getElementById('equipClose').addEventListener('click',function(){
+            equip_modal.style.display = "none";
+        });
+
+        document.getElementById('studioClose').addEventListener('click',function(){
+            studio_modal.style.display = "none";
+        });
+
+        window.onclick = function(event) {
+            if (event.target == studio_modal) {
+                studio_modal.style.display = "none";
+            } else if (event.target == equip_modal){
+                equip_modal.style.display = "none";
+            }
+        }
+
+        //Update loan status when buttons clicked
+        function updateLoanStatus(id, newStatus,rejectReason,type) {
             fetch('/update_loan_status', {
                 method: 'POST',
                 headers: {
@@ -338,41 +511,61 @@
                 },
                 body: JSON.stringify({
                     loan_id: id,
-                    new_status: newStatus
+                    new_status: newStatus,
+                    reject: rejectReason,
+                    type: type
                 })
             })
-
             .then(response => response.json())
                 .then(data => {
                     console.log('Success:', data);
-                    equipBookings[id-1].status = newStatus;
-                    document.getElementById("modalStatus").textContent = newStatus.toUpperCase();
-                    let statusSpan = document.querySelector('.record[data-id="' + id + '"] .status')
-                    statusSpan.textContent = newStatus;
-                    for (const attribute of Array.from(statusSpan.classList)){
-                        if (attribute.startsWith("status-") == true){
-                            statusSpan.classList.remove(attribute);
+                    if (type == "EQUIP"){
+                        recIdObject.status = newStatus;
+                        document.querySelector("#equipModal #modalStatus").textContent = newStatus.toUpperCase();
+                        let statusSpan = document.querySelector('.equipRecord[data-id="' + id + '"] .status')
+                        statusSpan.textContent = newStatus;
+                        for (const attribute of Array.from(statusSpan.classList)){
+                            if (attribute.startsWith("status-") == true){
+                                statusSpan.classList.remove(attribute);
+                            }
+                        }
+                        statusSpan.classList.add("status-"+newStatus);
+                        if (newStatus == 'confirmed'){
+                            alert("Booking #"+id+" has been approved.")
+                            confirmedButtons("EQUIP");
+                        } else if (newStatus == "rejected"){
+                            noButtons("EQUIP");
+                        } else if (newStatus == "canceled"){
+                            noButtons("EQUIP");
+                        }
+                    } else if (type == "STUDIO"){
+                        recIdObject.status = newStatus;
+                        document.querySelector("#studioModal #modalStatus").textContent = newStatus.toUpperCase();
+                        let statusSpan = document.querySelector('.studioRecord[data-id="' + id + '"] .status')
+                        statusSpan.textContent = newStatus;
+                        for (const attribute of Array.from(statusSpan.classList)){
+                            if (attribute.startsWith("status-") == true){
+                                statusSpan.classList.remove(attribute);
+                            }
+                        }
+                        statusSpan.classList.add("status-"+newStatus);
+                        if (newStatus == 'confirmed'){
+                            alert("Booking #"+id+" has been approved.")
+                            confirmedButtons("STUDIO");
+                        } else if (newStatus == "rejected"){
+                            noButtons("STUDIO");
+                        } else if (newStatus == "canceled"){
+                            noButtons("STUDIO");
                         }
                     }
-                    statusSpan.classList.add("status-"+newStatus);
-                    if (newStatus == 'confirmed'){
-                        alert("Booking #"+id+" has been approved.")
-                        confirmedButtons();
-                    } else if (newStatus == "rejected"){
-                        alert("Booking #"+id+" has been rejected.")
-                        noButtons();
-                    } else if (newStatus == "canceled"){
-                        alert("Booking #"+id+" has been cancelled.")
-                        noButtons();
-                    }
-                    
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                });       
-                }
+                });        
+        }
 
-        function send_mail(action,id){
+        //Auto emails
+        function send_mail(action,id,type){
             const targetUrl = "/send_mail"
             fetch(targetUrl, {
                 method: 'POST',
@@ -381,11 +574,11 @@
                 },
                 body: JSON.stringify({
                     "action": action,
-                    "id": id
+                    "id": id,
+                    "type": type
                 })
             })
             .then(response => {
-                // Check if the server responded with a success status code (200-299)
                 return response.json(); // Parse the JSON data from Flask
             })
             .then(data => {
@@ -393,23 +586,91 @@
             }) //def need to add some more error handling for email
         }
 
-        approve.addEventListener('click', function(){
-            updateLoanStatus(recId,'confirmed')
-            send_mail("approve",recId)
+        //When equip action buttons are clicked
+        equipApprove.addEventListener('click', function(){
+            updateLoanStatus(recId,'confirmed', null , "EQUIP")
+            send_mail("approve",recId,"EQUIP")
         });
 
-        reject.addEventListener('click', function(){
-            updateLoanStatus(recId,'rejected')
-            send_mail("reject",recId)
+        equipReject.addEventListener('click', function(){
+            document.getElementById('reject-modal').style.display = "flex";
+            rejectType = "EQUIP";
+            cancelOrReject = "REJECT";
         });
 
-        cancel.addEventListener('click', function(){
-            updateLoanStatus(recId,'canceled')
-            send_mail("cancel",recId)
+        equipCancel.addEventListener('click', function(){
+            document.getElementById('reject-modal').style.display = "flex"
+            rejectType = "EQUIP";
+            cancelOrReject = "CANCEL";
         });
 
-        remind.addEventListener('click', function(){
-            send_mail("remind",recId)
+
+        //when studio buttons are pushed
+    
+        studioCancel.addEventListener('click', function(){
+            document.getElementById('reject-modal').style.display = "flex"
+            cancelOrReject = "CANCEL";
+            rejectType = "STUDIO";
+        });
+
+        studioApprove.addEventListener('click', function(){
+            updateLoanStatus(recId,'confirmed', null , "STUDIO")
+            send_mail("approve",recId,"STUDIO")
+        });
+
+        studioReject.addEventListener('click', function(){
+            document.getElementById('reject-modal').style.display = "flex"
+            cancelOrReject = "REJECT";
+            rejectType = "STUDIO";
+        });
+
+        
+        //Reject modal
+        document.getElementById('reject-done').addEventListener('click', function(){
+            const rejectReason = document.getElementById('reject-reason').value;
+            const rejectInput = document.getElementById('reject-reason')
+            
+            if (!rejectReason) {
+                alert("Please enter a reason before proceeding.");
+                rejectInput.focus();
+                return; // Prevent the code below from running
+            }
+            document.getElementById("reject-reason").value = "";
+            if (rejectType == "EQUIP"){
+                if (cancelOrReject == "CANCEL"){
+                    updateLoanStatus(recId,'canceled',rejectReason,"EQUIP")
+                    send_mail("cancel",recId, "EQUIP")
+                } else if (cancelOrReject == "REJECT"){
+                    updateLoanStatus(recId,'rejected',rejectReason,"EQUIP")
+                    send_mail("reject",recId, "EQUIP")
+                }
+                document.getElementById('reject-modal').style.display = "none"
+                recIdObject.admin_reject_reason = rejectReason;
+                document.querySelector("#equipModal #modalRejectReason").textContent = rejectReason;
+                document.querySelector("#equipModal #modalRejectRow").style.display = "flex";
+                alert("Equipment booking #"+recId+" has been cancelled.")
+            } else if (rejectType == "STUDIO"){
+                if (cancelOrReject == "CANCEL"){
+                    updateLoanStatus(recId,'canceled',rejectReason,"STUDIO")
+                    send_mail("cancel",recId, "STUDIO")
+                } else if (cancelOrReject == "REJECT"){
+                    updateLoanStatus(recId,'rejected',rejectReason,"STUDIO")
+                    send_mail("reject",recId, "STUDIO")
+                }
+                document.getElementById('reject-modal').style.display = "none"
+                recIdObject.admin_reject_reason = rejectReason;
+                document.querySelector("#studioModal #modalRejectReason").textContent = rejectReason;
+                document.querySelector("#studioModal #modalRejectRow").style.display = "flex";
+                alert("Studio booking #"+recId+" has been cancelled.")
+            }  
+        });
+
+        document.getElementById("reject-modal-close").addEventListener('click', function() {
+            document.getElementById('reject-modal').style.display = "none";
+        });
+
+        equipRemind.addEventListener('click', function(){
+            send_mail("remind",recId,"EQUIP")
             alert("Reminder sent!") //add a count of reminders sent or smth here 
         });
 
@@ -418,20 +679,5 @@
         
 
 
-
-        span.addEventListener('click',function(){
-            modal.style.display = "none";
-        });
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-
-
     </script>
-
-
-
 {% endblock %}

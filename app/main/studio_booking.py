@@ -1,7 +1,10 @@
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
 from flask_login import current_user
-from extensions import db
-from models import StudioSetupOptions, StudioSpace, TimeSlot, StudioBooking,StudioBookingStatus,StudioBookingSetupSelection, User, UserRole
+from .extensions import db
+from .models import StudioSetupOptions, StudioSpace, TimeSlot, StudioBooking,StudioBookingStatus,StudioBookingSetupSelection, User, UserRole
+
+# from extensions import db
+# from models import StudioSetupOptions, StudioSpace, TimeSlot, StudioBooking,StudioBookingStatus,StudioBookingSetupSelection, User, UserRole
 from flask_login import login_required
 from sqlalchemy import select
 from datetime import datetime

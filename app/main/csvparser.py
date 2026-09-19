@@ -3,11 +3,14 @@
 import pandas as pd
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
 from flask_login import current_user
-from extensions import db
-from models import User, UserRole, Asset, EquipmentLoanItem, AssetStatus, EquipmentType, EquipmentCategory
+from .extensions import db
+from .models import Asset, AssetStatus, EquipmentType, EquipmentCategory
+from .app import app
+# from extensions import db
+# from models import Asset, AssetStatus, EquipmentType, EquipmentCategory
+# from app import app
 from flask_login import login_required
 from sqlalchemy import select, update
-from app import app
 from datetime import datetime
 from pathlib import Path
 
@@ -21,6 +24,8 @@ df['Contents'] = df['Contents'].fillna("None")
 columns = ['Category', 'Item Name', 'Item ID', 'Status', 'Contents']
 df_data = df[columns] #new df with clean data
 records = df_data.values.tolist() #convert to list
+
+
 
 for row in records:
     type = row[1]

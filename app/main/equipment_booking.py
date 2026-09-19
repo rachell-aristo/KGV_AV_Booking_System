@@ -1,12 +1,15 @@
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
 from flask_login import current_user
-from extensions import db
-from models import User, Asset, UserRole, EquipmentLoan, AssetStatus, EquipmentLoanItem, LoanStatus, EquipmentType, EquipmentCategory
+from .extensions import db
+from .models import EquipmentLoan, EquipmentLoanItem, LoanStatus, EquipmentType, EquipmentCategory
+from .utils import count_equip_booking_items,equip_type_lookup
+# from utils import count_equip_booking_items,equip_type_lookup
+# from extensions import db
+# from models import EquipmentLoan, EquipmentLoanItem, LoanStatus, EquipmentType, EquipmentCategory
 from flask_login import login_required
 from sqlalchemy import select
 from datetime import datetime
 import json
-from utils import count_equip_booking_items,equip_type_lookup
 
 
 equip_booking = Blueprint('equip_booking', __name__)

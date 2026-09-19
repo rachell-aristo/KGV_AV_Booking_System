@@ -1,4 +1,5 @@
-from extensions import db
+from .extensions import db
+# from extensions import db
 from flask_login import UserMixin
 import enum
 from sqlalchemy import ForeignKey
@@ -160,10 +161,11 @@ class EquipmentLoan(db.Model):
         return {
             "id": self.id,
             "loan_start_date": self.loan_start_date,
-            "loan_end_date": self.loan_start_date,
+            "loan_end_date": self.loan_end_date,
             "status" : self.status,
             "student_loan_reason" : self.student_loan_reason,
             "student_extra_notes" : self.student_extra_notes,
+            "admin_reject_reason" : self.admin_reject_reason,
             "fk_user_id" : self.fk_user_id,
             "created" : self.created
         }

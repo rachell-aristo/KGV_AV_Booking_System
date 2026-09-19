@@ -1,9 +1,12 @@
 from flask import Blueprint, render_template
-from extensions import db
-from models import LoanStatus, EquipmentLoanItem, StudioBooking,StudioBookingStatus, EquipmentLoan
+from .extensions import db
+from .models import LoanStatus, EquipmentLoanItem, StudioBooking,StudioBookingStatus, EquipmentLoan
+from .utils import count_equip_booking_items, equip_type_lookup
+# from extensions import db
+# from models import LoanStatus, EquipmentLoanItem, StudioBooking,StudioBookingStatus, EquipmentLoan
+#from utils import count_equip_booking_items, equip_type_lookup
 from flask_login import login_required, current_user
 from sqlalchemy import select
-from utils import count_equip_booking_items, equip_type_lookup
 
 student_home = Blueprint('student_home', __name__) #creates flask blueprint student_home
 
