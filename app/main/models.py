@@ -72,6 +72,13 @@ class EquipmentCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable = False)
     created = db.Column(db.DateTime, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name" : self.name,
+            "created" : self.created
+        }
     
     def __repr__(self):
         return f'<EquipmentCategory {self.id} {self.name}>'
@@ -127,6 +134,18 @@ class Asset(db.Model):
     fk_equipment_type_id = db.Column(ForeignKey("equipment_type.id"), nullable=False)
     equipment_type = db.relationship('EquipmentType')
     created = db.Column(db.DateTime, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "status" : self.status,
+            "name" : self.name,
+            "barcode" : self.barcode,
+            "descript" : self.descript,
+            "is_active" : self.is_active,
+            "equipment_type" : self.fk_equipment_type_id,
+            "created" : self.created
+        }
 
     def __repr__(self):
             return f'<Asset {self.id} {self.name}>'

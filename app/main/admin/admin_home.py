@@ -1,7 +1,7 @@
 from flask import Blueprint, abort, redirect, url_for, session, render_template, jsonify, request, flash
 from flask_mail import Mail, Message
 from ..extensions import db, mail
-from ..models import User, LoanStatus, UserRole, StudioBooking, EquipmentLoan, StudioSpace, TimeSlot, StudioBookingStatus
+from ..models import User, LoanStatus, UserRole, StudioBooking, EquipmentCategory, Asset, EquipmentLoan, StudioSpace, TimeSlot, StudioBookingStatus, EquipmentType
 from ..utils import count_equip_booking_items, equip_type_lookup
 
 
@@ -27,7 +27,6 @@ def fetch_data():
 
         studio_bookings = db.session.execute(select(StudioBooking)).scalars().all() 
         serialized_studio_bookings = [loan.to_dict() for loan in studio_bookings]
-   
 
         users = db.session.execute(select(User)).scalars().all() 
         serialized_users = [user.to_dict() for user in users]
@@ -35,6 +34,9 @@ def fetch_data():
         loan_items = {booking_id: dict(counter) 
         for booking_id, counter in count_equip_booking_items(equip_bookings).items()}
         type_lookup = equip_type_lookup()
+
+        assets = db.session.execute(select(Asset)).scalars().all()
+        serialized_assets = [item.to_dict() for item in assets]
 
         user_lookup = {} #dict of user ids and corresponding name
         for i in db.session.execute(select(User)).scalars().all():
@@ -48,10 +50,17 @@ def fetch_data():
         for i in db.session.execute(select(TimeSlot)).scalars().all():
             slot_lookup[i.id] = i.name
 
+        type_to_cat_lookup = {}
+        for i in db.session.execute(select(EquipmentType)).scalars().all():
+            category = db.session.execute(select(EquipmentCategory.name).where(i.fk_equipment_category_id == EquipmentCategory.id)).scalar()
+            type_to_cat_lookup[i.id] = category
+            
         return render_template("admin/admin_home.html", s_studio_bookings = serialized_studio_bookings, equip_bookings = equip_bookings, 
                             user_lookup = user_lookup, s_users = serialized_users,
                             loan_items = loan_items, type_lookup = type_lookup, s_equip_bookings = serialized_equip_bookings,
-                            studio_lookup = studio_lookup, slot_lookup = slot_lookup)
+                            studio_lookup = studio_lookup, slot_lookup = slot_lookup, s_assets = serialized_assets,
+                            type_to_cat_lookup = type_to_cat_lookup
+                            )
 
 @admin_home.route('/update_loan_status', methods=['POST'])
 @login_required

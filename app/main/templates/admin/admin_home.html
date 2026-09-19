@@ -23,7 +23,46 @@
 
     <!-- ASSETS CONTENT -->
     <div class="tabcontent active" data-page = "assets" id="assets" style = "display: none">
-        <h1>Assets</h1>
+        <div class = "filter-container">
+            <h1>Assets</h1>
+            <div class="panel panel-primary filterable">
+                <div><button class="filter-btn">Filter</button></div>
+                <table id = "assetTable">
+                    <!-- FILTER BUTTONS ASSET TABLE -->
+                    <tr class = "filters" style="display: none;">
+                        <th><input type="text" placeholder="ID" disabled></th>
+                        <th><input type="text" placeholder="Type" disabled></th>
+                        <th><input type="text" placeholder="Name" disabled></th>
+                        <th><input type="text" placeholder="Barcode" disabled></th>
+                        <th><input type="text" placeholder="Status" disabled></th>
+                    </tr>
+                    <tr class = "headings">
+                        <th>ID</th>
+                        <th>Category</th>
+                        <th>Name</th>
+                        <th>Barcode</th>
+                        <th>Status</th>
+                    </tr>
+                    <!-- ASSET TABLE RECORDS -->
+                    <tbody id="studio-table-body">
+                        {% for record in s_assets %}
+                            <tr class = "assetRecord" data-id = "{{record.id}}">
+                                <td>{{record.id}}</td>
+                                <td>{{type_to_cat_lookup.get(record.equipment_type,'Unknown Catgeory')}}</td>
+                                <td>{{record.name}}</td>
+                                <td>{{record.barcode}}</td>
+                                <td>
+                                    <span class="status status-{{ record.status.value | lower }}">
+                                        {{ record.status.value | upper }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tr class="no-result" style="display: none;"><td colspan="6">No result found</td></tr>
+                </table>
+            </div>
+        </div>
     </div>
     <!-- BOOKING CONTENT -->
     <div class="tabcontent active" data-page = "booking" id="booking" style = "display: none">
