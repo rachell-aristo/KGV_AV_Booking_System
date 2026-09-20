@@ -946,3 +946,7 @@ td {
     width: 100%;
   }
 }
+
+.edit-modal{
+  display: none;
+}

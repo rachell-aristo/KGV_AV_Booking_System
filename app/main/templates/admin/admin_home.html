@@ -64,7 +64,7 @@
             </div>
         </div>
     </div>
-    <!-- BOOKING CONTENT -->
+    <!-- EQUIP BOOKING CONTENT -->
     <div class="tabcontent active" data-page = "booking" id="booking" style = "display: none">
         <div class = "filter-container">
             <h1>Equipment Bookings</h1>
@@ -77,6 +77,7 @@
                         <th><input type="text" placeholder="User" disabled></th>
                         <th><input type="text" placeholder="Request Date" disabled></th>
                         <th><input type="text" placeholder="Loan Period" disabled></th>
+                        <th><input type="text" placeholder="Items:" disabled></th>
                         <th><input type="text" placeholder="Status" disabled></th>
                     </tr>
                     <tr class = "headings">
@@ -84,6 +85,7 @@
                         <th>User</th>
                         <th>Request Date</th>
                         <th>Loan Period</th>
+                        <th>Items</th>
                         <th>Status</th>
                     </tr>
                     <!-- EQUIPMENT TABLE RECORDS -->
@@ -92,14 +94,24 @@
                             <tr class = "equipRecord" data-id = "{{record.id}}">
                                 <td>{{record.id}}</td>
                                 <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
-                                <td>{{record.created.strftime("%b %d, %Y")}}</td>
-                                <td>{{record.loan_start_date.strftime("%b %d, %Y")}} - {{record.loan_end_date.strftime("%b %d, %Y")}}</td>
+                                <td>{{record.created.strftime("%b %d")}}</td>
+                                <td>{{record.loan_start_date.strftime("%b %d")}} - {{record.loan_end_date.strftime("%b %d")}}</td>
+                                <td>
+                                    {% for bookingId, items in loan_items.items() %}
+                                        {% if bookingId == record.id %}
+                                            {% for type, quantity in items.items() %}
+                                                ×{{quantity}} {{type_lookup.get(type)}} {% if not loop.last %} • {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                
                                 <td>
                                     <span class="status status-{{ record.status.value | lower }}">
                                         {{ record.status.value | upper }}
                                     </span>
                                 </td>
-                            </tr>
+                            </tr>                            
                         {% endfor %}
                     </tbody>
                     <tr class="no-result" style="display: none;"><td colspan="5">No result found</td></tr>
@@ -179,7 +191,41 @@
             </div>
         </div>
 
-        <!-- BOOKING RECORD MODAL -->
+    
+        <!-- EQUIP EDIT MODAL -->
+        <div id="equip-edit-modal" class = "edit-modal">
+            <form>
+                <div class="modal-content" >
+                    <div class = "modal-body">
+                        <span class = "close"  id="equip-edit-Close">&times;</span>
+                        <h1><span class="label">ID: #</span> <span id="edit-modalId"></span></h1>
+                        <p><span class="label">Status:</span> <select id="edit-modalStatus"></select></p>
+                        <p><span class="label">Requested by:</span> <span id="edit-modalUser"></span></p>
+                        <p><span class="label">Requested on:</span><span id="edit-modalCreated"></span> </p>
+                        <p><span class="label">Loan Period:</span> <input class = "edit-modalLoanPeriod" type = "date" id="equip-edit-modalLoanPeriod"></p>
+                        <input id="loan-start-date" type="hidden" name="edit-loan-start-date">
+                        <input id="loan-end-date" type="hidden" name="edit-loan-end-date">
+                        <p><span class="label">Items:</span> 
+                            <div id = "edit-modalItems">
+
+                            </div>
+                            <button id = "add-item" type = 'button'>Add item</button>
+                        </p>
+                        <p><span class="label">Booking reason:</span><textarea type = "text" id="edit-modalReason" rows="2"></textarea></p>
+                        <p id="edit-modalRejectRow" style="display: none;">
+                            <span class="label">Cancel reason:</span> 
+                            <textarea type = "text" id="edit-modalRejectReason" rows="2"></textarea>
+                        </p>
+                        <p><textarea type = "text" id="edit-modalNotes" rows="2"></textarea></p>
+                    </div>
+                    <div id="edit-modal-actions">
+                        <button type = "button" id = "equip-edit-save">Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- EQUIP RECORD MODAL -->
         <div id="equipModal" class="modal">
             <div class="modal-content" >
                 <div class = "modal-body">
@@ -196,6 +242,8 @@
                         <span id="modalRejectReason"></span>
                     </p>
                     <p id="modalNotes"></p>
+                    <button id = "equip-edit" class="edit-btn"><i class="fa-regular fa-pen-to-square"></i></button>
+
                 </div>
                 <div id = "equipActions" class="modal-actions">
                     <button id = "approve" style = "display: none">Approve</button>
@@ -266,6 +314,9 @@
         const userLookup = {{ user_lookup | tojson | safe }};
         const loanItems = {{ loan_items | tojson | safe }};
         const typeLookup = {{ type_lookup | tojson | safe }};
+        const loanStatus = {{ loan_status | tojson | safe }};
+
+
 
 
         document.querySelectorAll('.filter-container').forEach(container => {
@@ -274,46 +325,52 @@
             const noResult = container.querySelector('.no-result');
             const btn = container.querySelector('.filter-btn')
             btn.addEventListener('click',()=>{
-                const isDisabled = inputs[0].disabled;
-                container.querySelector(".filters").style.display = ""
-                container.querySelector(".headings").style.display = "none"
+                const isDisabled = inputs[0].disabled; 
+                //checks the state of filter (open or closed) before click
                 
                 inputs.forEach(input => {
-                    input.disabled = !isDisabled;
+                    input.disabled = !isDisabled; 
+                    //if filter was closed, open it, if it was open, close it
                     input.value = '';
                 });
                 
-                rows.forEach(row => row.style.display = '');
-                noResult.style.display = 'none';
+                rows.forEach(row => row.style.display = ''); //show all data rows
+                noResult.style.display = 'none'; //hide no result row
 
-                if (isDisabled) {
+                if (isDisabled) { //if filter gets turned on 
+                    container.querySelector(".filters").style.display = ""
+                    container.querySelector(".headings").style.display = "none"
                     inputs[0].focus();
-                } else{
+                } else{ //if filter gets turned off
                     container.querySelector(".filters").style.display = "none"
                     container.querySelector(".headings").style.display = ""
                 }
             })
 
-            inputs.forEach(input => {
-                input.addEventListener('input', () => {
+            inputs.forEach(input => { //for each input box
+                input.addEventListener('input', () => { //everytime any of the input boxes change
                     let hiddenRowsCount = 0;
                     rows.forEach(row => {
-                        // Check if row satisfies every search input
-                        const isMatch = Array.from(inputs).every((inp, colIndex) => {
-                            const query = inp.value.toLowerCase().trim();
-                            if (!query) return true;
-                            const cellText = row.children[colIndex].textContent.toLowerCase();
-                            return cellText.includes(query);
-
+                        const isMatch = Array.from(inputs).every((inp, colIndex) => { 
+                            //essentially a for loop through each input box
+                            //.every returns true if every element returned true, and false if even one element returned false
+                            const query = inp.value.toLowerCase().trim(); 
+                            //lowercase + remove spaces of search query
+                            if (!query) return true; //if the input box is empty, return true
+                            const cellText = row.children[colIndex].textContent.toLowerCase(); 
+                            //the text content of each cell of each row and col -> lowercase 
+                            return cellText.includes(query); 
+                            //return true if any of celltext includes search query
                         });
-                        if (isMatch) {
-                            row.style.display = '';
+                        if (isMatch) { //if all the inputs satsifies the current row
+                            row.style.display = ''; //show the row
                         } else {
-                            row.style.display = 'none';
+                            row.style.display = 'none'; //hide the row
                             hiddenRowsCount++;
                         }
                     });
                     noResult.style.display = (hiddenRowsCount === rows.length) ? 'table-row' : 'none';
+                    //if hidden rows = num of rows, then set display to 'table-row', else 'none'
                 });
             });
         
@@ -366,6 +423,31 @@
         const studioCancel = document.querySelector("#studioModal #cancel");
         const studioCheckIn = document.querySelector("#studioModal #checkIn");
         const studioRemind = document.querySelector("#studioModal #remind");
+
+        function enableButtons(){
+            equipApprove.disabled = false;
+            equipApprove.textContent = "Approve"
+            equipReject.disabled = false;
+            equipReject.textContent = "Reject"
+            equipCancel.disabled = false;
+            equipCancel.textContent = "Cancel"
+            equipCheckIn.disabled = false;
+            equipCheckIn.textContent = "Check In"
+            equipRemind.disabled = false;
+            equipRemind.textContent = "Remind"
+
+            studioApprove.disabled = false;
+            studioApprove.textContent = "Approve"
+            studioReject.disabled = false;
+            studioReject.textContent = "Reject"
+            studioCancel.disabled = false;
+            studioCancel.textContent = "Cancel"
+            studioCheckIn.disabled = false;
+            studioCheckIn.textContent = "Check In"
+            studioRemind.disabled = false;
+            studioRemind.textContent = "Remind"
+
+        }
 
         function confirmedButtons(type){
             if (type == "EQUIP"){
@@ -443,15 +525,18 @@
                 document.querySelector("#equipModal #modalCreated").textContent = new Date(recIdObject.created).toISOString().split('T')[0];
                 document.querySelector("#equipModal #modalPeriod").textContent = new Date(recIdObject.loan_start_date).toISOString().split('T')[0] 
                 + " - " + new Date(recIdObject.loan_end_date).toISOString().split('T')[0];
+                
+                
 
                 const items = loanItems[recId];
                 if (items) {
                     let itemList = [];
                     for (const [typeId, quantity] of Object.entries(items)) {
                         const itemName = typeLookup[typeId] || `Item #${typeId}`;
-                        itemList.push(`${itemName} x${quantity}`);
+                        itemList.push(`x${quantity} ${itemName}`);
                     }
-                    document.querySelector("#equipModal #modalItems").textContent = itemList.join(" | ");
+                    console.log(itemList)
+                    document.querySelector("#equipModal #modalItems").textContent = itemList.join(" • ");
                 } else {
                     document.querySelector("#equipModal #modalItems").textContent = "None";
                 }
@@ -466,7 +551,7 @@
                     document.querySelector("#equipModal #modalRejectReason").textContent = recIdObject.admin_reject_reason;
                     document.querySelector("#equipModal #modalRejectRow").style.display = "flex";
                 } else{
-                    document.querySelector("#equipModal #modalRejectReason").value = "";
+                    document.querySelector("#equipModal #modalRejectReason").textContent = "";
                     document.querySelector("#equipModal #modalRejectRow").style.display = "none";
                 }
 
@@ -485,6 +570,160 @@
                 };
             });
 
+        });
+
+        //equipment edit modal
+
+        function addItemRow(typeId, quantity){
+            const newItemContainer = document.createElement('div')
+
+            newItemContainer.className = "edit-modal-item-container"
+
+            const newSelect =  document.createElement('select')
+            newSelect.className = "item-select"
+
+            for (const [id, name] of Object.entries(typeLookup)) {
+                newSelect.appendChild(new Option(name, id));
+            }
+            newSelect.value = typeId
+            newSelect.placeholder = 'Select equipment';
+
+            const newNumInput =  document.createElement('input')
+            newNumInput.type = "number"
+            newNumInput.className = "item-quantity"
+            newNumInput.value = quantity
+
+            const newRemoveBtn = document.createElement('button')
+            newRemoveBtn.textContent = 'x'
+            newRemoveBtn.type = "button"
+            newRemoveBtn.className = "item-remove"
+
+            newRemoveBtn.addEventListener('click',function(){
+                newRemoveBtn.closest('.edit-modal-item-container').remove();
+            });
+
+            newItemContainer.appendChild(newSelect)
+            newItemContainer.appendChild(newNumInput)
+            newItemContainer.appendChild(newRemoveBtn)
+            
+
+            document.getElementById("edit-modalItems").appendChild(newItemContainer)
+        }
+
+        document.getElementById('equip-edit-save').addEventListener('click',function(){
+            const items = [];
+            const itemsContainer = document.getElementById("edit-modalItems")
+            document.querySelectorAll('#equip-edit-modal .edit-modal-item-container').forEach(function(row){
+                const typeId   = parseInt(row.querySelector('.item-select').value);
+                const quantity = parseInt(row.querySelector('.item-quantity').value);
+                items.push({ type_id: typeId, quantity: quantity });
+            });
+            console.log(items)
+            if (items.length === 0){
+                alert("No items selected in loan");
+                return
+            }
+            fetch('/edit_equip_loan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'loan_id': recId,
+                    'new_status': document.querySelector('#equip-edit-modal #edit-modalStatus').value.toLowerCase(),
+                    'reason' : document.querySelector("#equip-edit-modal #edit-modalReason").value,
+                    'reject': document.querySelector("#equip-edit-modal #edit-modalRejectReason").value,
+                    'notes' : document.querySelector("#equip-edit-modal #edit-modalNotes").value,
+                    'loan_start' : document.querySelector('#equip-edit-modal #loan-start-date').value,
+                    'loan_end' : document.querySelector('#equip-edit-modal #loan-end-date').value,
+                    'items': items
+                })
+            })
+            .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                });
+        });
+
+        //flatpicker
+
+        
+
+
+
+        document.getElementById("equip-edit").addEventListener('click', function(){
+            console.log(recId)
+            recIdObject = equipBookings.find(loan => loan.id === recId);
+
+            const modalCreatedFP = flatpickr(".edit-modalLoanPeriod", {
+                mode:"range",
+                allowInput:true,  
+                altInput: true, 
+                altFormat: "F j, Y", 
+                dateFormat: "Y-m-d",
+                defaultDate: [new Date(recIdObject.loan_start_date) , new Date(recIdObject.loan_end_date)],
+                onChange: function(selectedDates, dateStr, instance) {
+                    // Check if both dates are selected
+                    if (selectedDates.length === 2) {
+                        const startDate = selectedDates[0]; // JS Date Object
+                        const endDate = selectedDates[1];   // JS Date Object
+
+                        // To get them as formatted strings, use the built-in instance formatter:
+                        const startDateStr = instance.formatDate(startDate, "Y-m-d");
+                        const endDateStr = instance.formatDate(endDate, "Y-m-d");
+                        
+                        document.getElementById('loan-start-date').value = startDateStr;
+                        document.getElementById('loan-end-date').value = endDateStr;
+                    }
+                }
+            });
+            
+
+            document.querySelector("#equip-edit-modal #edit-modalId").textContent = recId;
+            const statusDropdown = document.querySelector("#equip-edit-modal #edit-modalStatus");
+            for (const status of loanStatus){
+                statusDropdown.appendChild(new Option(status.toUpperCase(), status.toUpperCase()));
+            }
+            statusDropdown.value = recIdObject.status.toUpperCase();
+
+            const itemsContainer = document.querySelector("#equip-edit-modal #edit-modalItems");
+            itemsContainer.replaceChildren();
+            
+
+            const items = loanItems[recId] || {}; //prevent returning undefined
+            for (const [typeId, quantity] of Object.entries(items)) {
+                addItemRow(typeId, quantity)
+            }
+
+            
+
+            document.querySelector("#equip-edit-modal #edit-modalUser").textContent = userLookup[recIdObject.fk_user_id];
+            document.querySelector("#equip-edit-modal #edit-modalCreated").textContent = new Date(recIdObject.created).toISOString().split('T')[0];
+            document.querySelector("#equip-edit-modal #edit-modalReason").value = recIdObject.student_loan_reason;
+            document.getElementById("equip-edit-modal").style.display = "block";
+            if (recIdObject.student_extra_notes){
+                document.querySelector("#equip-edit-modal #edit-modalNotes").value = recIdObject.student_extra_notes;
+            } else{
+                document.querySelector("#equip-edit-modal #edit-modalNotes").placeholder = "No notes";
+            }
+
+            if (recIdObject.admin_reject_reason){
+                document.querySelector("#equip-edit-modal #edit-modalRejectReason").value = recIdObject.admin_reject_reason;
+                document.querySelector("#equip-edit-modal #edit-modalRejectRow").style.display = "flex";
+            } else{
+                document.querySelector("#equip-edit-modal #edit-modalRejectReason").value = "";
+                document.querySelector("#equip-edit-modal #edit-modalRejectRow").style.display = "none";
+            }
+
+        });
+
+        document.getElementById("add-item").addEventListener('click',function(){
+            addItemRow()
+        });
+
+        document.getElementById("equip-edit-Close").addEventListener('click', function() {
+            document.getElementById('equip-edit-modal').style.display = "none";
+            document.querySelector("#equip-edit-modal #edit-modalStatus").options.length = 0;
         });
 
         // Studio record model
@@ -557,49 +796,109 @@
             })
             .then(response => response.json())
                 .then(data => {
-                    console.log('Success:', data);
-                    if (type == "EQUIP"){
-                        recIdObject.status = newStatus;
-                        document.querySelector("#equipModal #modalStatus").textContent = newStatus.toUpperCase();
-                        let statusSpan = document.querySelector('.equipRecord[data-id="' + id + '"] .status')
-                        statusSpan.textContent = newStatus;
-                        for (const attribute of Array.from(statusSpan.classList)){
-                            if (attribute.startsWith("status-") == true){
-                                statusSpan.classList.remove(attribute);
+                    if (data.success == true){
+                        if (type == "EQUIP"){
+                            recIdObject.status = newStatus;
+                            document.querySelector("#equipModal #modalStatus").textContent = newStatus.toUpperCase(); 
+                            //change the status on modal
+                            let statusSpan = document.querySelector('.equipRecord[data-id="' + id + '"] .status')
+                            statusSpan.textContent = newStatus;
+                            //change status on table
+                            for (const attribute of Array.from(statusSpan.classList)){
+                                if (attribute.startsWith("status-") == true){
+                                    statusSpan.classList.remove(attribute);
+                                    //remove existing class on record with old status
+                                }
+                            }
+                            statusSpan.classList.add("status-"+newStatus);
+                            //add new class status to record
+                            if (data.email_sent === true){
+                                if (newStatus == 'confirmed'){
+                                    alert("Equipment booking #"+id+" has been approved and an email has been sent.")
+                                    confirmedButtons("EQUIP");
+                                    enableButtons()
+                                } else if (newStatus == "rejected"){
+                                    alert("Equipment booking #"+id+" has been rejected and an email has been sent.")
+                                    noButtons("EQUIP");
+                                    enableButtons()
+                                } else if (newStatus == "canceled"){
+                                    alert("Equipment booking #"+id+" has been canceled and an email has been sent.")
+                                    noButtons("EQUIP");
+                                    enableButtons()
+                                }
+                            } else if (data.email_sent === false){
+                                if (newStatus == 'confirmed'){
+                                    alert("Equipment booking #"+id+" has been approved and an email has NOT been sent due to:"+data.email_message)
+                                    confirmedButtons("EQUIP");
+                                    enableButtons()
+                                } else if (newStatus == "rejected"){
+                                    alert("Equipment booking #"+id+" has been rejected and an email has NOT been sent due to:"+data.email_message)
+                                    noButtons("EQUIP");
+                                    enableButtons()
+                                } else if (newStatus == "canceled"){
+                                    alert("Equipment booking #"+id+" has been canceled and an email has NOT been sent due to:"+data.email_message)
+                                    noButtons("EQUIP");
+                                    enableButtons()
+                                }
+                            } else if (data.email_sent === null){
+                                alert("Equipment booking #"+id+" has been updated")
+                                enableButtons()
+                            }
+                            
+                        } else if (type == "STUDIO"){
+                            recIdObject.status = newStatus;
+                            document.querySelector("#studioModal #modalStatus").textContent = newStatus.toUpperCase();
+                            let statusSpan = document.querySelector('.studioRecord[data-id="' + id + '"] .status')
+                            statusSpan.textContent = newStatus;
+                            for (const attribute of Array.from(statusSpan.classList)){
+                                if (attribute.startsWith("status-") == true){
+                                    statusSpan.classList.remove(attribute);
+                                }
+                            }
+                            statusSpan.classList.add("status-"+newStatus);
+                            
+                            if (data.email_sent === true){
+                                if (newStatus == 'confirmed'){
+                                    alert("Studio booking #"+id+" has been approved and an email has been sent.")
+                                    confirmedButtons("STUDIO");
+                                    enableButtons()
+                                } else if (newStatus == "rejected"){
+                                    alert("Studio booking #"+id+" has been rejected and an email has been sent.")
+                                    noButtons("STUDIO");
+                                    enableButtons()
+                                } else if (newStatus == "canceled"){
+                                    alert("Studio booking #"+id+" has been canceled and an email has been sent.")
+                                    noButtons("STUDIO");
+                                    enableButtons()
+                                }
+                            } else if (data.email_sent === false){
+                                if (newStatus == 'confirmed'){
+                                    alert("Studio booking #"+id+" has been approved and an email has NOT been sent due to:"+data.email_message)
+                                    confirmedButtons("STUDIO");
+                                    enableButtons()
+                                } else if (newStatus == "rejected"){
+                                    alert("Studio booking #"+id+" has been rejected and an email has NOT been sent due to:"+data.email_message)
+                                    noButtons("STUDIO");
+                                    enableButtons()
+                                } else if (newStatus == "canceled"){
+                                    alert("Studio booking #"+id+" has been canceled and an email has NOT been sent due to:"+data.email_message)
+                                    noButtons("STUDIO");
+                                    enableButtons()
+                                }
+                            } else if (data.email_sent === null){
+                                alert("Studio booking #"+id+" has been updated")
+                                enableButtons()
                             }
                         }
-                        statusSpan.classList.add("status-"+newStatus);
-                        if (newStatus == 'confirmed'){
-                            alert("Booking #"+id+" has been approved.")
-                            confirmedButtons("EQUIP");
-                        } else if (newStatus == "rejected"){
-                            noButtons("EQUIP");
-                        } else if (newStatus == "canceled"){
-                            noButtons("EQUIP");
-                        }
-                    } else if (type == "STUDIO"){
-                        recIdObject.status = newStatus;
-                        document.querySelector("#studioModal #modalStatus").textContent = newStatus.toUpperCase();
-                        let statusSpan = document.querySelector('.studioRecord[data-id="' + id + '"] .status')
-                        statusSpan.textContent = newStatus;
-                        for (const attribute of Array.from(statusSpan.classList)){
-                            if (attribute.startsWith("status-") == true){
-                                statusSpan.classList.remove(attribute);
-                            }
-                        }
-                        statusSpan.classList.add("status-"+newStatus);
-                        if (newStatus == 'confirmed'){
-                            alert("Booking #"+id+" has been approved.")
-                            confirmedButtons("STUDIO");
-                        } else if (newStatus == "rejected"){
-                            noButtons("STUDIO");
-                        } else if (newStatus == "canceled"){
-                            noButtons("STUDIO");
-                        }
+                    } else if (data.success == false){
+                        alert(data.message)
+                        enableButtons()
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    alert("Something went wrong. The booking may not have been updated, so please refresh the page to check.")
+                    enableButtons()
                 });        
         }
 
@@ -622,13 +921,28 @@
             })
             .then(data => {
                 console.log(data)
-            }) //def need to add some more error handling for email
+                if (data.success == false){
+                    alert(data.message)
+                    enableButtons()
+                }
+                else if (action == "remind"){
+                    alert("Reminder sent!")
+                    enableButtons()
+                }
+            }) 
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Couldn't reach the server, so the email may not have been sent.")
+                enableButtons()
+            });     
         }
 
         //When equip action buttons are clicked
         equipApprove.addEventListener('click', function(){
             updateLoanStatus(recId,'confirmed', null , "EQUIP")
-            send_mail("approve",recId,"EQUIP")
+            equipApprove.disabled = true;
+            equipApprove.textContent = "Loading..."
+            // send_mail("approve",recId,"EQUIP")
         });
 
         equipReject.addEventListener('click', function(){
@@ -654,7 +968,9 @@
 
         studioApprove.addEventListener('click', function(){
             updateLoanStatus(recId,'confirmed', null , "STUDIO")
-            send_mail("approve",recId,"STUDIO")
+            studioApprove.disabled = true;
+            studioApprove.textContent = "Loading..."
+            // send_mail("approve",recId,"STUDIO")
         });
 
         studioReject.addEventListener('click', function(){
@@ -678,29 +994,33 @@
             if (rejectType == "EQUIP"){
                 if (cancelOrReject == "CANCEL"){
                     updateLoanStatus(recId,'canceled',rejectReason,"EQUIP")
-                    send_mail("cancel",recId, "EQUIP")
+                    equipCancel.disabled = true;
+                    equipCancel.textContent = "Loading..."
                 } else if (cancelOrReject == "REJECT"){
                     updateLoanStatus(recId,'rejected',rejectReason,"EQUIP")
-                    send_mail("reject",recId, "EQUIP")
+                    equipReject.disabled = true;
+                    equipReject.textContent = "Loading..."
                 }
                 document.getElementById('reject-modal').style.display = "none"
                 recIdObject.admin_reject_reason = rejectReason;
                 document.querySelector("#equipModal #modalRejectReason").textContent = rejectReason;
                 document.querySelector("#equipModal #modalRejectRow").style.display = "flex";
-                alert("Equipment booking #"+recId+" has been cancelled.")
             } else if (rejectType == "STUDIO"){
                 if (cancelOrReject == "CANCEL"){
                     updateLoanStatus(recId,'canceled',rejectReason,"STUDIO")
-                    send_mail("cancel",recId, "STUDIO")
+                    studioCancel.disabled = true;
+                    studioCancel.textContent = "Loading..."
+                    
                 } else if (cancelOrReject == "REJECT"){
                     updateLoanStatus(recId,'rejected',rejectReason,"STUDIO")
-                    send_mail("reject",recId, "STUDIO")
+                    studioReject.disabled = true;
+                    studioReject.textContent = "Loading..."
+                    
                 }
                 document.getElementById('reject-modal').style.display = "none"
                 recIdObject.admin_reject_reason = rejectReason;
                 document.querySelector("#studioModal #modalRejectReason").textContent = rejectReason;
                 document.querySelector("#studioModal #modalRejectRow").style.display = "flex";
-                alert("Studio booking #"+recId+" has been cancelled.")
             }  
         });
 
@@ -710,13 +1030,9 @@
 
         equipRemind.addEventListener('click', function(){
             send_mail("remind",recId,"EQUIP")
-            alert("Reminder sent!") //add a count of reminders sent or smth here 
+            equipRemind.disabled = true;
+            equipRemind.textContent = "Loading..."
+             //add a count of reminders sent or smth here 
         });
-
-        
-
-        
-
-
     </script>
 {% endblock %}
