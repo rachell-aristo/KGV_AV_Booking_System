@@ -27,6 +27,7 @@ const fp = flatpickr("#loan-period", {
             } else{
                 alert("Maximum 3 days allowed! If you need to make a special request, please make note of it in the 'Extra notes' box")
                 fp.clear()
+                return
             }
             
             // add verification that start date cannot be weekend
@@ -47,6 +48,12 @@ const fp = flatpickr("#loan-period", {
 
             .then(response => response.json())
             .then(data => {
+                document.querySelectorAll(".off-limits-msg").forEach(function(message){
+                    message.remove()
+                });
+                document.querySelectorAll(".unavailable-msg").forEach(function(message){
+                    message.remove()
+                });
                 let updated_quantity_dict = data
                 console.log('Success:', updated_quantity_dict);
                 let selectElements = document.querySelectorAll(".quantity-select")
@@ -57,22 +64,40 @@ const fp = flatpickr("#loan-period", {
                         offLimits.style.display = "block"
                         offLimits.className = "off-limits-msg"
                         document.querySelectorAll(".container").forEach(function(card){
-                            if (card.dataset.equipId == type){
+                            if (card.dataset.id == type){
                                 card.appendChild(offLimits);
+                                card.querySelector(".quantity-select").style.display = "none";
+                                card.querySelector(".quantity-select").selectedIndex = -1;
+                                card.querySelector('label[for="quantity"]').style.display = "none";
+
                             }
-                        }); // FIX THiS LATER & ADD MESSGA FOR FULLY BOOKED
-                         // <p class="unavailable-msg" style="display: none;">Fully booked for these dates</p>
+                        }); 
+                    } else if (quantity <= 0){
+                        let unavailable = document.createElement('div')
+                        unavailable.textContent = 'Fully booked for these dates';
+                        unavailable.style.display = "block"
+                        unavailable.className = "unavailable-msg"
+                        document.querySelectorAll(".container").forEach(function(card){
+                            if (card.dataset.id === type){
+                                card.appendChild(unavailable);
+                                card.querySelector(".quantity-select").style.display = "none";
+                                card.querySelector(".quantity-select").selectedIndex = -1; 
+                                card.querySelector('label[for="quantity"]').style.display = "none";
+                            }
+                        }); 
+                    } else{
+                        selectElements.forEach(function(select) {
+                            if (select.dataset.id == type){
+                                select.closest('.container').querySelector('label[for="quantity"]').style.display = "";
+                                select.innerHTML = "";
+                                select.style.display = ""
+                                for (let i = 0; i < quantity+1;i++){
+                                    select.add(new Option(String(i),i))
+                                }
+                                
+                            }
+                        })
                     }
-                    selectElements.forEach(function(select) {
-                        if (select.dataset.id == type){
-                            select.innerHTML = "";
-                            select.style.display = "block"
-                            for (let i = 0; i < quantity+1;i++){
-                                select.add(new Option(String(i),i))
-                            }
-                            
-                        }
-                    })
                 }
             })
             .catch(error => {
@@ -102,41 +127,31 @@ tablinks.forEach(function(tab){
     });
 });
 
-selectedEquip = []; //list of ids
-quants = [] //parallel list with quantities
 
-const equipQuants = document.querySelectorAll(".quantity-select");
-equipQuants.forEach(function(select){
-    select.addEventListener('change',function(){ //when a quantity drop down's value is changed
-    equipId = parseInt(select.closest('[data-equip-id]').dataset.equipId)
-    let newQuant = parseInt(select.value)
-    if (selectedEquip.includes(equipId) == true){
-        quants[selectedEquip.indexOf(equipId)] = newQuant
-        if (newQuant === 0){ //if an equipment is set to 0, remove from selected list
-            quants.splice(quants[selectedEquip.indexOf(equipId)],1)
-            selectedEquip.splice([selectedEquip.indexOf(equipId)],1)
-        }
-    } else if (newQuant !== 0){
-        selectedEquip.push(equipId);
-        quants.push(newQuant);
-    }            
-    console.log(selectedEquip)
-    console.log(quants)
-    });
-});
 
 let form = document.querySelector('form')
 
 if (form !== null){
     form.addEventListener('submit', function(event) { //when form is submitted
         const form = document.querySelector('form');
-        if (selectedEquip.length === 0){
+
+        const items = {}
+        document.querySelectorAll(".equip-card").forEach(function(card){
+            const id = card.dataset.equipId
+            const qty = parseInt(card.querySelector(".quantity-select").value)
+            if (qty>0){
+                items[id] = qty
+            }
+
+        });
+        if (Object.keys(items).length === 0){
             event.preventDefault();  // stops the form from submitting
             document.getElementById('error-message').textContent = "Please select at least one item to loan."; //CHECK IF THESE CHECKS WORK
+        } else{
+            document.getElementById('selected-equip').value = JSON.stringify(Object.keys(items).map(Number));
+            document.getElementById('selected-quants').value = JSON.stringify(Object.values(items).map(Number)); 
         }
-        
-        document.getElementById('selected-equip').value = JSON.stringify(selectedEquip);
-        document.getElementById('selected-quants').value = JSON.stringify(quants); 
+ 
     });
 
 
