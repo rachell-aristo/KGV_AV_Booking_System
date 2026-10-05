@@ -1,0 +1,11 @@
+Dear {{name}},
+
+Your booking for {{book_date}} is confirmed. If you have any enquiries, please email wongh265@kgv.hk
+
+Summary of your booking:
+{{book_content}}
+
+Best regards,
+
+KGV AV Media Studio
+
