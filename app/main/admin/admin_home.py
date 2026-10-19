@@ -107,12 +107,12 @@ def update_loan_status():
         email_message = None
         email_sent = None
         if action is not None:
-            email, error, name, book_date, book_content = get_student_email(type,loan_id)
+            email, error, name, book_date, book_content, reject_reason = get_student_email(type,loan_id)
             if error:
                 email_sent = False
                 email_message = "Student email not found on file"
             else:
-                email_success, email_error = send_booking_email(action, loan_id, email, name, book_date, book_content)
+                email_success, email_error = send_booking_email(action, loan_id, email, name, book_date, book_content, reject_reason)
                 if email_success:
                     email_sent = True
                 elif email_error:
@@ -134,11 +134,12 @@ def get_student_email(booking_type, booking_id):
         book_date = str(book_start) + ' to ' + str(book_end)
         equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.id == booking_id)).scalars().all()
         book_counter_obj = count_equip_booking_items(equip_bookings)
-        book_content = ""
+        book_content = []
         for id, items in book_counter_obj.items():
             for item, quantity in items.items():
                 item_string = str(equip_type_lookup(item))
-                book_content += item_string + " | Quantity: " + str(quantity) + "\n"
+                book_content.append(item_string + " | Quantity: " + str(quantity) + "\n")
+        reject_reason = db.session.execute(select(EquipmentLoan.admin_reject_reason).where(EquipmentLoan.id == booking_id)).scalar()
     elif booking_type == "STUDIO":
         user_id = db.session.execute(select(StudioBooking.fk_user_id).where(StudioBooking.id == booking_id)).scalar()
         user_name = db.session.execute(select(User.name).where(User.id == user_id)).scalar()
@@ -146,7 +147,11 @@ def get_student_email(booking_type, booking_id):
         book_slot= db.session.execute(select(StudioBooking.fk_slot_id).where(StudioBooking.id == booking_id)).scalar()
         book_space_id = db.session.execute(select(StudioBooking.fk_studio_space_id).where(StudioBooking.id == booking_id)).scalar()
         setup_id = db.session.execute(select(StudioBookingSetupSelection.fk_studio_setup_options_id).where(StudioBookingSetupSelection.fk_studio_booking_id == booking_id)).scalar()
-        book_content = studio_type_lookup(book_space_id) + "\n" + "Time Slot: " + slot_type_lookup(book_slot) + "\n" + "Set up: " + studio_setup_lookup(setup_id)
+        book_content = []
+        book_content.append(studio_type_lookup(book_space_id)) 
+        book_content.append("Time Slot: " + slot_type_lookup(book_slot))
+        book_content.append("Set up: " + studio_setup_lookup(setup_id))
+        reject_reason = db.session.execute(select(StudioBooking.admin_reject_reason).where(StudioBooking.id == booking_id)).scalar()
     if user_id is None:
         return None, "Booking not found"
 
@@ -154,22 +159,23 @@ def get_student_email(booking_type, booking_id):
     if not user_email:
         return None, "No email address on file"
     else:
-        return user_email, None, user_name, book_date, book_content
+        return user_email, None, user_name, book_date, book_content, reject_reason
 
-def send_booking_email(action, booking_id, user_email, user_name, book_date, book_content, reason=None):
+def send_booking_email(action, booking_id, user_email, user_name, book_date, book_content, reason):
+    print("DEBUG",reason)
     if action == "approve":
-        msg = Message("Booking confirmed (#)", sender = os.getenv("DEL_EMAIL"),recipients=[user_email]) 
-        print(user_name,book_date,book_content)
-        msg.body = render_template("admin/booking_success_email.txt", name = user_name, book_date = book_date, book_content = book_content)
+        msg = Message(f"Booking confirmed (#{booking_id})",sender = os.getenv("DEL_EMAIL"),recipients=[user_email]) 
+        print(type(book_content))
+        msg.html = render_template("admin/booking_success_email.html", name = user_name, booking_id = booking_id, book_date = book_date, book_content = book_content)
     elif action == "remind":
-        msg = Message("Overdue reminder", sender = os.getenv("DEL_EMAIL"),recipients=[user_email]) 
-        msg.body = "Please return your overdue booking >:("
+        msg = Message(f"Booking #{booking_id} overdue", sender = os.getenv("DEL_EMAIL"),recipients=[user_email]) 
+        msg.html = render_template("admin/booking_overdue_email.html", name = user_name, booking_id = booking_id,book_date = book_date, book_content = book_content)
     elif action == "cancel":
-        msg = Message("Your booking has been cancelled", sender = os.getenv("DEL_EMAIL"),recipients=[user_email]) 
-        msg.body = "Cancelled"
+        msg = Message(f"Your booking #{booking_id} has been cancelled", sender = os.getenv("DEL_EMAIL"),recipients=[user_email]) 
+        msg.html = render_template("admin/booking_cancel_email.html", name = user_name, booking_id = booking_id,book_date = book_date, book_content = book_content, reject_reason = reason)
     elif action == "reject":
-        msg = Message("Your booking has been rejected", sender = os.getenv("DEL_EMAIL"),recipients=[user_email]) 
-        msg.body = "Your booking was rejected because:"+ (reason or "No reason given")
+        msg = Message(f"Your booking #{booking_id} has been rejected", sender = os.getenv("DEL_EMAIL"),recipients=[user_email]) 
+        msg.html = render_template("admin/booking_reject_email.html", name = user_name, booking_id = booking_id,book_date = book_date, book_content = book_content, reject_reason = reason)
     else:
         return False, "Unknown action, email not sent"
     try:
@@ -195,10 +201,10 @@ def send_email():
         if action not in ("approve","remind","cancel","reject"):
             return jsonify({'success': False, 'message': 'Unknown action.'}), 400    
         
-        email, error, name, book_date, book_content = get_student_email(type,record_id)
+        email, error, name, book_date, book_content, reject_reason = get_student_email(type,record_id)
         if error:
             return jsonify({'success': False, 'message':error}), 404  
-        success, message = send_booking_email(action, record_id, email, name, book_date, book_content)
+        success, message = send_booking_email(action, record_id, email, name, book_date, book_content, reject_reason)
 
         if success:
             return jsonify({'success': True, 'message': "Email sent"})

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>{% block title %}KGV Booking System{% endblock %}</title>
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+   </head>
+   <body>
+    <div>
+        Dear {{name}},<br><br>
+        Your booking for {{book_date}} has been cancelled.<br><br>
+
+        
+        <strong>Summary of your booking:</strong><br>
+        Reject reason: {{reject_reason}}<br>
+        <p>Booking number: #{{booking_id}}</p>
+        {% for i in book_content %}
+            <p>{{i}}</p>
+        {% endfor%}
+
+        If you have any enquiries, please email wongh265@kgv.hk <br><br>
+
+        Best regards, <br><br>
+        KGV AV Media Studio
+    </div>
+   </body>
+</html>

@@ -27,7 +27,7 @@ def data_fetch():
     equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() 
     booking_counts = count_equip_booking_items(equip_bookings)
     overdue_loans = []
-    type_lookup = equip_type_lookup()
+    type_lookup = equip_type_lookup("table")
 
     for i in bookings: #Checks if user has overdue bookings. Eventually need to figure out how to manually override this from admin panel
         if i.status == LoanStatus.OVERDUE:
