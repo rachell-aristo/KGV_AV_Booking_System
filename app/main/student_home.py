@@ -24,7 +24,7 @@ def fetch_data():
     equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() 
     equip_booking_ids = [b.id for b in equip_bookings]
     loan_items = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id.in_(equip_booking_ids))).scalars().all() 
-    type_lookup = equip_type_lookup()
+    type_lookup = equip_type_lookup("table")
     # equip_types_in_booking = [] #list of fk_equipment_type ids
     
     item_names = []

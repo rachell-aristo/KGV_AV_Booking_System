@@ -343,6 +343,7 @@ button:hover,
 .status-confirmed { background: var(--success-bg); color: var(--success); }
 .status-pending   { background: var(--pending-bg); color: var(--pending); }
 .status-finished  { background: var(--navy-100);   color: var(--navy-700); }
+.status-checkedout { background: var(--purple-100); color: var(--purple-700);}
 .status-overdue {
   background: #ffe3e3;
   color: #c92a2a;
@@ -949,4 +950,124 @@ td {
 
 .edit-modal{
   display: none;
+}
+
+/* ---------------------------- Equipment check out ---------------------------- */
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.checkout-layout .card {
+  margin-bottom: 0;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  color: var(--navy-900);
+  margin: 0 0 0.75rem;
+}
+
+/* progress */
+.progress-text {
+  margin: 0 0 0.5rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--navy-100);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+#progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold-500);
+  transition: width 0.25s ease;
+}
+
+/* requested items table */
+.checkout-items table {
+  margin: 0;
+}
+
+.checkout-items tr:last-child td {
+  border-bottom: none;
+}
+
+.checkout-items td:first-child {
+  border-left: 3px solid transparent;
+}
+
+tr.waiting td {
+  color: var(--ink-soft);
+}
+
+tr.scanned td {
+  background: var(--success-bg);
+  font-weight: 600;
+}
+
+tr.scanned td:first-child {
+  border-left-color: var(--success);
+}
+
+/* scan panel */
+.camera-box {
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  background: var(--navy-900);
+  color: var(--navy-100);
+  border-radius: var(--radius);
+}
+
+#barcode-input {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.scan-message {
+  min-height: 2.75rem;
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-sm);
+  background: var(--navy-50);
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.scan-message.ok {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.scan-message.error {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.checkout-scan button {
+  width: 100%;
+}
+
+.checkout-scan button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
 }
