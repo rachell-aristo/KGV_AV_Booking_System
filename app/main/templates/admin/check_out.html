@@ -97,20 +97,39 @@
                 console.error('Error:', error);
                 alert("Something went wrong.")
             })   
+            .finally(() => {
+                //add conditionals for this depending on result
+                confirmButton.disabled = false;
+                confirmButton.textContent = "Confirm check out"
+            })
         }
 
         confirmButton.addEventListener('click', function(){
+            confirmButton.disabled = true;
+            confirmButton.textContent = "Loading..."
             fetch("/confirm_check_out", {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(scanned_assets)
             })
-            .then(response => response.json())
-            .then(data => {
-                console.log("SUCCESS",data)
-                alert("checked out!")
+            .then(response => {
+                if (response.ok){
+                    alert("Successfully checked out!")
+                }
+                return response.json()
             })
-            .catch(error => { /* handle failure */ });
+            .then(data => {
+                if (data.message != null){
+                    alert(data.message)
+                }
+                else{
+                    alert("Something went wrong.")
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Couldn't reach the server, checked out assets may not have been updated")
+            });
             
         })
         

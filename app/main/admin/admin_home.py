@@ -69,47 +69,79 @@ def fetch_data():
 @admin_home.route('/check_out/<int:booking_id>')
 @login_required
 def check_out(booking_id):
-    if db.session.execute(select(EquipmentLoan.status).where(EquipmentLoan.id == booking_id)).scalar() != LoanStatus.CONFIRMED:
-        print("ERROR")
+    if current_user.role != UserRole.ADMIN:
+        abort(403)
     else:
-        equip_loan_objs = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id == booking_id)).scalars().all()
-        loan_items = []
-        for object in equip_loan_objs:
-            item = dict(loan_item_id = object.id, equip_type_id = object.fk_equipment_type_id, name = equip_type_lookup(object.fk_equipment_type_id), asset_barcode = None)
-            loan_items.append(item)
+        if db.session.execute(select(EquipmentLoan.status).where(EquipmentLoan.id == booking_id)).scalar() != LoanStatus.CONFIRMED:
+            print("ERROR")
+        else:
+            equip_loan_objs = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id == booking_id)).scalars().all()
+            loan_items = []
+            for object in equip_loan_objs:
+                item = dict(loan_item_id = object.id, equip_type_id = object.fk_equipment_type_id, name = equip_type_lookup(object.fk_equipment_type_id), asset_barcode = None)
+                loan_items.append(item)
             
     return render_template("admin/check_out.html", booking_id = booking_id, items = loan_items)
 
 @admin_home.route('/fetch_equip_type')
 @login_required
 def fetch_equip_type():
-    input_barcode = request.args.get('barcode').upper() #gets the value of date from url
-    print(input_barcode)
-    if not input_barcode: #if the value is missing, return empty list so no error
-        return jsonify([])
-    equip_type_id = db.session.execute(select(Asset.fk_equipment_type_id).where(Asset.barcode == input_barcode)).scalar()
-    return jsonify(equip_type_id) #return JSON data to frontend
+    if current_user.role != UserRole.ADMIN:
+        abort(403)
+    else:
+        input_barcode = request.args.get('barcode').upper() #gets the value of date from url
+        print(input_barcode)
+        if not input_barcode: #if the value is missing, return empty list so no error
+            return jsonify([])
+        equip_type_id = db.session.execute(select(Asset.fk_equipment_type_id).where(Asset.barcode == input_barcode)).scalar()
+        return jsonify(equip_type_id) #return JSON data to frontend
 
 @admin_home.route('/confirm_check_out',methods=['POST'])
 @login_required
 def confirm_check_out():
-    data = request.json
-    for item in data: #update loan items with correct asset id 
-        update_loan_item = update(EquipmentLoanItem).where(EquipmentLoanItem.id == item["loan_item_id"]).values(fk_asset_barcode = item["barcode"])
-        #update asset table statuses
-        update_asset = update(Asset).where(Asset.barcode == item["barcode"]).values(status = AssetStatus.UNAVAILABLE)
-        loan_id = db.session.execute(select(EquipmentLoanItem.fk_loan_id).where(EquipmentLoanItem.id == item["loan_item_id"])).scalar()
-        #update loan status
-        update_loan = update(EquipmentLoan).where(EquipmentLoan.id == loan_id).values(status = LoanStatus.CHECKEDOUT)
-        db.session.execute(update_loan_item)
-        db.session.execute(update_asset)
-    db.session.execute(update_loan)
-    db.session.commit()
+    if current_user.role != UserRole.ADMIN:
+        abort(403)
+    else:
+        data = request.json
+        #error checking: was data recieved?
+        if data == None or not (isinstance(data, list)) or not data:
+            return jsonify({'success': False, 'message': "Data not recieved"}),400
+        #error checking: does the loan exist and is still confirmed?
+        booking_id = db.session.execute(select(EquipmentLoanItem.fk_loan_id).where(EquipmentLoanItem.id == data[0]["loan_item_id"])).scalar()
+        print("DEBUG",data[0]["loan_item_id"])
+        if booking_id is None:
+            return jsonify({'success': False, 'message': "Booking not found"}),404
+        status = db.session.execute(select(EquipmentLoan.status).where(EquipmentLoan.id == booking_id)).scalar()
+        if status != LoanStatus.CONFIRMED:
+            print(status)
+            print(booking_id)
+            return jsonify({'success': False, 'message': f"This booking is {status.value}, not confirmed (ready to check out)"}),409
+        for item in data: #update loan items with correct asset id 
+            asset_id = db.session.execute(select(Asset.id).where(Asset.barcode == item["barcode"])).scalar()
+            if asset_id is None:
+                return jsonify({'success': False, 'message': f"Asset {item['barcode']} does not exist"}),404
+            asset_status = db.session.execute(select(Asset.status).where(Asset.barcode == item["barcode"])).scalar()
+            #check if asset status is avaliable
+            if asset_status != AssetStatus.AVAILABLE:
+                return jsonify({'success': False, 'message': f"Asset {item["barcode"]} is not available"}),409
+        try:
+            for item in data: #update loan items with correct asset id     
+                update_loan_item = update(EquipmentLoanItem).where(EquipmentLoanItem.id == item["loan_item_id"]).values(fk_asset_barcode = item["barcode"])
+                #update asset table statuses
+                update_asset = update(Asset).where(Asset.barcode == item["barcode"]).values(status = AssetStatus.UNAVAILABLE)
+                #update loan status
+                update_loan = update(EquipmentLoan).where(EquipmentLoan.id == booking_id).values(status = LoanStatus.CHECKEDOUT)
+                db.session.execute(update_loan_item)
+                db.session.execute(update_asset)
+                db.session.execute(update_loan)
+            db.session.commit()
+            print("success update")
+            return jsonify({"success":True, "message":"success"})
+        except Exception as e:
+            current_app.logger.exception(e)
+            db.session.rollback()
+            return jsonify({'success': False, 'message': "Failed to update to database. Please try again."}),500
     
-
-
-    print("success update")
-    return jsonify({"success":True, "message":"sucess"})
 
 @admin_home.route('/update_loan_status', methods=['POST'])
 @login_required
@@ -122,7 +154,7 @@ def update_loan_status():
     }
 
     if current_user.role != UserRole.ADMIN:
-        abort(401)
+        abort(403)
     else:
         data = request.json
         loan_id = int(data.get('loan_id'))
