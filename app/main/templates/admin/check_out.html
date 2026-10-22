@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Equipment Check Out{% endblock %}
+{% block content %}
+    <div id="data-store" data-loan-items='{{ items | tojson }}'></div>
+    <div class="checkout-layout" >
+        <div class="card checkout-items" id = "item-list" data-booking-id = "{{booking_id}}">
+            <h1>Equipment Check Out</h1>
+            <p class="card-title">Requested items:</p>
+            <div>
+                <p class="progress-text">
+                    <span id="scanned_quantity">0</span> of {{items|length}} scanned
+                </p>
+                <div class="progress-bar"><div id="progress-fill"></div></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item name</th>
+                        <th>Asset barcode</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        <tr class = "{{"waiting" if item.asset_barcode is none else "scanned"}}" data-loan-item-id = "{{item.loan_item_id}}" data-equip-type-id = "{{item.equip_type_id}}">
+                            <td>{{item.name}}</td>
+                            <td class="barcode-cell">{{'Waiting for input...' if item.asset_barcode is none else item.asset_barcode}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card checkout-scan" id = "item-insert">
+            <div class="camera-box">Camera preview</div>
+            <input type = "text" id="barcode-input" placeholder = "Enter barcode" autofocus aria-label = "barcode">
+            <p class = "scan-message" id = "message"></p>
+            <button id = "confirm-booking" disabled>Confirm check out</button>
+        </div>
+    </div>
+    <script>
+        const booking_id = document.getElementById("item-list").dataset.bookingId
+        const confirmButton = document.getElementById("confirm-booking")
+        const text = document.getElementById("data-store").dataset.loanItems
+        const loan_items = JSON.parse(text)
+        const scan_message = document.getElementById("message")
+        const barcode_input = document.getElementById("barcode-input")
+        const scanned_assets = []
+        barcode_input.addEventListener("keydown", function (event) {
+            if (event.key === "Enter"){
+                fetchEquipType(barcode_input.value.trim())
+                barcode_input.value = ""
+                scan_message.textContent = ""
+            }
+        });
+
+
+        function updateProgress(){
+            document.getElementById("scanned_quantity").textContent = scanned_assets.length
+            document.getElementById("progress-fill").style.width = (scanned_assets.length/loan_items.length)*100 + "%"
+        }
+
+        function fetchEquipType(barcode) {
+            console.log("Reached fetch equip type")
+            barcode = barcode.toUpperCase()
+            fetch(`/fetch_equip_type?barcode=${barcode}`)
+            // asynchronus fetch, sends data request to server 
+            .then(response => response.json()) //take raw HTML data and JSONify
+            .then(fetched_id => { //now that data is called 'data' and parsed into this function
+                const onLoan = loan_items.some(item => item.equip_type_id == fetched_id)
+                if (onLoan){
+                    const row = document.querySelector(`tr.waiting[data-equip-type-id="${fetched_id}"]`) 
+                    if (scanned_assets.some(asset => asset.barcode === barcode)){
+                        scan_message.textContent = "Asset already scanned"
+                        return;
+                    } if (row == null){
+                        scan_message.textContent = "This equipment has already been scanned"
+                    }
+                    else{
+                        row.classList.remove('waiting');
+                        row.classList.add('scanned');
+                        row.querySelector(".barcode-cell").textContent = barcode;
+                        let item_dict = {}
+                        item_dict = { loan_item_id: row.dataset.loanItemId, barcode: barcode };
+                        console.log("DEBUG",item_dict)
+                        scanned_assets.push(item_dict)
+                        updateProgress()
+                        if (scanned_assets.length == loan_items.length){
+                            confirmButton.disabled = false;
+                        }
+                    }
+                } else if (fetched_id == null){
+                    scan_message.textContent = "Asset not found"
+                } else{
+                    scan_message.textContent = "Asset not in requested equipment type"
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Something went wrong.")
+            })   
+        }
+
+        confirmButton.addEventListener('click', function(){
+            fetch("/confirm_check_out", {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(scanned_assets)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("SUCCESS",data)
+                alert("checked out!")
+            })
+            .catch(error => { /* handle failure */ });
+            
+        })
+        
+
+
+    </script>
+
+{% endblock %}

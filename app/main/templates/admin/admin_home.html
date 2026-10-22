@@ -44,7 +44,7 @@
                         <th>Status</th>
                     </tr>
                     <!-- ASSET TABLE RECORDS -->
-                    <tbody id="studio-table-body">
+                    <tbody id="asset-table-body">
                         {% for record in s_assets %}
                             <tr class = "assetRecord" data-id = "{{record.id}}">
                                 <td>{{record.id}}</td>
@@ -184,7 +184,7 @@
                     <button id = "approve" style = "display: none">Approve</button>
                     <button id = "reject" style = "display: none">Reject</button>
                     <!-- only appear if loan is not approved -->
-                    <button id = "checkIn" style = "display: none">Check in</button>
+                    <button id = "checkOut" style = "display: none">Check Out</button>
                     <button id = "cancel" style = "display: none">Cancel</button>  
                     <button id = "remind" style = "display: none">Remind</button> 
                 </div>
@@ -249,7 +249,8 @@
                     <button id = "approve" style = "display: none">Approve</button>
                     <button id = "reject" style = "display: none">Reject</button>
                     <!-- only appear if loan is not approved -->
-                    <button id = "checkIn" style = "display: none">Check in</button>
+                    <button id = "checkOut" style = "display: none">Check Out</button>
+                    <button id = "checkIn" style = "display: none">Check In</button>
                     <button id = "cancel" style = "display: none">Cancel</button>  
                     <button id = "remind" style = "display: none">Remind</button> 
                 </div>
@@ -415,13 +416,15 @@
         const equipApprove = document.querySelector("#equipModal #approve");
         const equipReject = document.querySelector("#equipModal #reject");
         const equipCancel = document.querySelector("#equipModal #cancel");
+        const equipCheckOut = document.querySelector("#equipModal #checkOut");
         const equipCheckIn = document.querySelector("#equipModal #checkIn");
+        const equipIn = document.querySelector("#equipModal #checkIn");
         const equipRemind = document.querySelector("#equipModal #remind");
 
         const studioApprove = document.querySelector("#studioModal #approve");
         const studioReject = document.querySelector("#studioModal #reject");
         const studioCancel = document.querySelector("#studioModal #cancel");
-        const studioCheckIn = document.querySelector("#studioModal #checkIn");
+        const studioCheckOut = document.querySelector("#studioModal #checkOut");
         const studioRemind = document.querySelector("#studioModal #remind");
 
         function enableButtons(){
@@ -431,6 +434,8 @@
             equipReject.textContent = "Reject"
             equipCancel.disabled = false;
             equipCancel.textContent = "Cancel"
+            equipCheckOut.disabled = false;
+            equipCheckOut.textContent = "Check Out"
             equipCheckIn.disabled = false;
             equipCheckIn.textContent = "Check In"
             equipRemind.disabled = false;
@@ -442,8 +447,8 @@
             studioReject.textContent = "Reject"
             studioCancel.disabled = false;
             studioCancel.textContent = "Cancel"
-            studioCheckIn.disabled = false;
-            studioCheckIn.textContent = "Check In"
+            studioCheckOut.disabled = false;
+            studioCheckOut.textContent = "Check Out"
             studioRemind.disabled = false;
             studioRemind.textContent = "Remind"
 
@@ -454,13 +459,13 @@
                 equipApprove.style.display = "none";
                 equipReject.style.display = "none";
                 equipCancel.style.display = "block";
-                equipCheckIn.style.display = "block";
+                equipCheckOut.style.display = "block";
                 equipRemind.style.display = "none";
             } else if (type == "STUDIO"){
                 studioApprove.style.display = "none";
                 studioReject.style.display = "none";
                 studioCancel.style.display = "block";
-                studioCheckIn.style.display = "block";
+                studioCheckOut.style.display = "block";
                 studioRemind.style.display = "none";
             }
             
@@ -471,13 +476,13 @@
                 equipApprove.style.display = "block";
                 equipReject.style.display = "block";
                 equipCancel.style.display = "none";
-                equipCheckIn.style.display = "none";
+                equipCheckOut.style.display = "none";
                 equipRemind.style.display = "none";
             } else if (type == "STUDIO"){
                 studioApprove.style.display = "block";
                 studioReject.style.display = "block";
                 studioCancel.style.display = "none";
-                studioCheckIn.style.display = "none";
+                studioCheckOut.style.display = "none";
                 studioRemind.style.display = "none";
             }
         }
@@ -487,14 +492,20 @@
                 equipApprove.style.display = "none";
                 equipReject.style.display = "none";
                 equipCancel.style.display = "none";
-                equipCheckIn.style.display = "none";
+                equipCheckOut.style.display = "none";
                 equipRemind.style.display = "block";
             } else if (type == "STUDIO"){
                 studioApprove.style.display = "none";
                 studioReject.style.display = "none";
                 studioCancel.style.display = "none";
-                studioCheckIn.style.display = "none";
+                studioCheckOut.style.display = "none";
                 studioRemind.style.display = "block";
+            }
+        }
+
+        function checkOutButtons(type){
+            if (type == "EQUIP"){
+                equipCheckIn.style.display = "block"
             }
         }
 
@@ -503,13 +514,13 @@
                 equipApprove.style.display = "none";
                 equipReject.style.display = "none";
                 equipCancel.style.display = "none";
-                equipCheckIn.style.display = "none";
+                equipCheckOut.style.display = "none";
                 equipRemind.style.display = "none";
             } else if (type == "STUDIO"){
                 studioApprove.style.display = "none";
                 studioReject.style.display = "none";
                 studioCancel.style.display = "none";
-                studioCheckIn.style.display = "none";
+                studioCheckOut.style.display = "none";
                 studioRemind.style.display = "none";
             }
         }
@@ -609,6 +620,13 @@
 
             document.getElementById("edit-modalItems").appendChild(newItemContainer)
         }
+
+        //Check out equip functionality
+        equipCheckOut.addEventListener('click',function(){
+            const bookingId = recId
+            const url = `/check_out/${bookingId}`
+            window.location.href = url
+        })
 
         document.getElementById('equip-edit-save').addEventListener('click',function(){
             const items = [];

@@ -19,8 +19,6 @@ login_manager = LoginManager()
 admin_emails = ['leer17@kgv.hk']
 teacher_emails = []
 
-
-
 google = oauth.register(
     name='google',
     client_id=os.getenv('GOOGLE_CLIENT_ID'),

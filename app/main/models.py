@@ -24,6 +24,7 @@ class LoanStatus(str, enum.Enum):
     OVERDUE = "overdue" #uhhh we need a system to update loanStatus actually to overdue thenn
     PENDING = "pending"
     CONFIRMED = "confirmed"
+    CHECKEDOUT = "checkedout"
     REJECTED = "rejected"
     FINISHED = "finished"
     CANCELED = "canceled"
@@ -127,7 +128,7 @@ class Asset(db.Model):
     __tablename__ = 'asset'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable = False)
-    barcode = db.Column(db.String(255), nullable = False)
+    barcode = db.Column(db.String(255), nullable = False, unique = True)
     status = db.Column(db.Enum(AssetStatus), nullable=False)
     descript = db.Column(db.String(1000), nullable = True)
     is_active = db.Column(db.Boolean, nullable = False )
@@ -199,7 +200,7 @@ class EquipmentLoanItem(db.Model):
     fk_equipment_type_id = db.Column(ForeignKey("equipment_type.id"), nullable=False)
     equipment_type = db.relationship('EquipmentType')
 
-    fk_asset_id = db.Column(ForeignKey("asset.id"), nullable=True)
+    fk_asset_barcode = db.Column(ForeignKey("asset.barcode"), nullable=True)
     asset = db.relationship('Asset')
 
     fk_loan_id = db.Column(ForeignKey("equipment_loan.id"), nullable=False)

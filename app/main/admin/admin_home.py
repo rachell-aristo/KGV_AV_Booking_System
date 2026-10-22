@@ -1,16 +1,13 @@
 from flask import Blueprint, abort, current_app, url_for, session, render_template, jsonify, request, flash
 from flask_mail import Mail, Message
 from ..extensions import db, mail
-from ..models import User, LoanStatus, UserRole, StudioBooking, EquipmentCategory, Asset, EquipmentLoan, StudioSpace, TimeSlot, StudioBookingStatus, EquipmentType, StudioBookingSetupSelection
+from ..models import User, LoanStatus, UserRole, StudioBooking, EquipmentCategory, Asset, EquipmentLoan, StudioSpace, TimeSlot, StudioBookingStatus, EquipmentType, StudioBookingSetupSelection, EquipmentLoanItem, AssetStatus
 from ..utils import count_equip_booking_items, equip_type_lookup, studio_type_lookup, slot_type_lookup, studio_setup_lookup
 import os
 
 from flask_login import login_required, current_user
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import create_async_engine
-
-#next step: include booking reason + extra notes in approve email
-
 
 admin_home = Blueprint('admin_home', __name__) #creates flask blueprint admin_home
 
@@ -67,6 +64,52 @@ def fetch_data():
                             studio_lookup = studio_lookup, slot_lookup = slot_lookup, s_assets = serialized_assets,
                             type_to_cat_lookup = type_to_cat_lookup, loan_status = loan_status
                             )
+
+
+@admin_home.route('/check_out/<int:booking_id>')
+@login_required
+def check_out(booking_id):
+    if db.session.execute(select(EquipmentLoan.status).where(EquipmentLoan.id == booking_id)).scalar() != LoanStatus.CONFIRMED:
+        print("ERROR")
+    else:
+        equip_loan_objs = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id == booking_id)).scalars().all()
+        loan_items = []
+        for object in equip_loan_objs:
+            item = dict(loan_item_id = object.id, equip_type_id = object.fk_equipment_type_id, name = equip_type_lookup(object.fk_equipment_type_id), asset_barcode = None)
+            loan_items.append(item)
+            
+    return render_template("admin/check_out.html", booking_id = booking_id, items = loan_items)
+
+@admin_home.route('/fetch_equip_type')
+@login_required
+def fetch_equip_type():
+    input_barcode = request.args.get('barcode').upper() #gets the value of date from url
+    print(input_barcode)
+    if not input_barcode: #if the value is missing, return empty list so no error
+        return jsonify([])
+    equip_type_id = db.session.execute(select(Asset.fk_equipment_type_id).where(Asset.barcode == input_barcode)).scalar()
+    return jsonify(equip_type_id) #return JSON data to frontend
+
+@admin_home.route('/confirm_check_out',methods=['POST'])
+@login_required
+def confirm_check_out():
+    data = request.json
+    for item in data: #update loan items with correct asset id 
+        update_loan_item = update(EquipmentLoanItem).where(EquipmentLoanItem.id == item["loan_item_id"]).values(fk_asset_barcode = item["barcode"])
+        #update asset table statuses
+        update_asset = update(Asset).where(Asset.barcode == item["barcode"]).values(status = AssetStatus.UNAVAILABLE)
+        loan_id = db.session.execute(select(EquipmentLoanItem.fk_loan_id).where(EquipmentLoanItem.id == item["loan_item_id"])).scalar()
+        #update loan status
+        update_loan = update(EquipmentLoan).where(EquipmentLoan.id == loan_id).values(status = LoanStatus.CHECKEDOUT)
+        db.session.execute(update_loan_item)
+        db.session.execute(update_asset)
+    db.session.execute(update_loan)
+    db.session.commit()
+    
+
+
+    print("success update")
+    return jsonify({"success":True, "message":"sucess"})
 
 @admin_home.route('/update_loan_status', methods=['POST'])
 @login_required
