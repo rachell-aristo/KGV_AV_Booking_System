@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Equipment Check Out{% endblock %}
 {% block content %}
+{% from "components/banner.html" import banner %}
     <div id="data-store" data-loan-items='{{ items | tojson }}'></div>
+    {% if booking_counts %}
+        {% call banner (title = user_name ~ " has overdue loan(s)", kind = "danger") %}
+            <ul class="banner-list">
+                {% for overdue_loan_id, items in booking_counts.items() %}
+                    <li>ID: {{overdue_loan_id}} |
+                    {% for type_id, quantity in items.items() %}
+                        {{ equip_type_lookup[type_id] }} x{{ quantity }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                     </li>
+                {% endfor %}
+            </ul>
+        {% endcall %}
+    {% endif %}
     <div class="checkout-layout" >
         <div class="card checkout-items" id = "item-list" data-booking-id = "{{booking_id}}">
             <h1>Equipment Check Out</h1>
@@ -127,11 +141,7 @@
                 confirmButton.disabled = false;
                 confirmButton.textContent = "Confirm check out"
             });
-            
         })
-        
-
-
     </script>
 
 {% endblock %}

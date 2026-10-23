@@ -12,8 +12,6 @@ from sqlalchemy.ext.asyncio import create_async_engine
 admin_home = Blueprint('admin_home', __name__) #creates flask blueprint admin_home
 
 
-
-
 @admin_home.route('/admin_home')
 @login_required
 def fetch_data():
@@ -70,18 +68,27 @@ def fetch_data():
 @login_required
 def check_out(booking_id):
     loan_items = []
+    overdue_loans = []
+    booking_counts = []
+    type_lookup = equip_type_lookup("table")
     if current_user.role != UserRole.ADMIN:
         abort(403)
     else:
         if db.session.execute(select(EquipmentLoan.status).where(EquipmentLoan.id == booking_id)).scalar() != LoanStatus.CONFIRMED:
             print("ERROR") #need a browser message
         else:
+            user_id = db.session.execute(select(EquipmentLoan.fk_user_id).where(EquipmentLoan.id == booking_id)).scalar()
+            user_name = db.session.execute(select(User.name).where(User.id == user_id)).scalar()
             equip_loan_objs = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id == booking_id)).scalars().all()
             for object in equip_loan_objs:
                 item = dict(loan_item_id = object.id, equip_type_id = object.fk_equipment_type_id, name = equip_type_lookup(object.fk_equipment_type_id), asset_barcode = None)
                 loan_items.append(item)
-            
-    return render_template("admin/check_out.html", booking_id = booking_id, items = loan_items)
+            overdue_loans = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == user_id, EquipmentLoan.status == LoanStatus.OVERDUE)).scalars().all()
+            print(type(overdue_loans),overdue_loans)                
+            booking_counts = count_equip_booking_items(overdue_loans)
+            print('dbug',user_name)
+    return render_template("admin/check_out.html", booking_id = booking_id, items = loan_items, 
+                           booking_counts = booking_counts, equip_type_lookup = type_lookup, user_name = user_name)
 
 @admin_home.route('/return/<int:booking_id>')
 @login_required

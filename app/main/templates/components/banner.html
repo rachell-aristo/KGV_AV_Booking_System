@@ -1,0 +1,10 @@
+{% macro banner(kind="info", title="") %}
+    <div class = "banner banner-{{kind}}">
+        <p class = "banner-title">{{title}}</p>
+        <div class = "banner-body">
+            {{ caller() }}
+        </div>
+        <button type="button" class = "banner-close" data-dismiss-banner  aria-label="Dismiss">×</button>
+    </div>
+
+{% endmacro %}

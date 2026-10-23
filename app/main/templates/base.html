@@ -22,4 +22,15 @@
          {% block content %}{% endblock %}
       </main>
    </body>
+   <script>
+      banner_close = document.querySelectorAll(".banner-close")
+      banner_close.forEach(close_button => {
+         const banner = close_button.closest(".banner")
+         banner.addEventListener("click",()=>{
+            banner.remove()
+         })
+         
+      })
+
+   </script>
 </html>
