@@ -97,11 +97,6 @@
                 console.error('Error:', error);
                 alert("Something went wrong.")
             })   
-            .finally(() => {
-                //add conditionals for this depending on result
-                confirmButton.disabled = false;
-                confirmButton.textContent = "Confirm check out"
-            })
         }
 
         confirmButton.addEventListener('click', function(){
@@ -119,16 +114,18 @@
                 return response.json()
             })
             .then(data => {
-                if (data.message != null){
+                if (data.success == false){
                     alert(data.message)
-                }
-                else{
-                    alert("Something went wrong.")
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert("Couldn't reach the server, checked out assets may not have been updated")
+            })
+            .finally(() => {
+                //add conditionals for this depending on result
+                confirmButton.disabled = false;
+                confirmButton.textContent = "Confirm check out"
             });
             
         })

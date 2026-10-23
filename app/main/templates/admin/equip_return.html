@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Equipment Return{% endblock %}
+{% block content %}
+    <div id="data-store" data-loan-items='{{ items | tojson }}'></div>
+    <div class="return-layout" >
+        <div class="card return-items" id = "item-list" data-booking-id = "{{booking_id}}">
+            <h1>Equipment Return</h1>
+            <p class="card-title">Requested items:</p>
+            <div>
+                <p class="progress-text">
+                    <span id="scanned_quantity">0</span> of {{items|length}} scanned
+                </p>
+                <div class="progress-bar"><div id="progress-fill"></div></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item name</th>
+                        <th>Asset barcode</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        <tr class = "waiting" data-asset-barcode = "{{item.asset_barcode}}"data-loan-item-id = "{{item.loan_item_id}}" data-equip-type-id = "{{item.equip_type_id}}">
+                            <td>{{item.name}}</td>
+                            <td class="barcode-cell">{{item.asset_barcode}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card checkout-scan" id = "item-insert">
+            <div class="camera-box">Camera preview</div>
+            <input type = "text" id="barcode-input" placeholder = "Enter barcode" autofocus aria-label = "barcode">
+            <p class = "scan-message" id = "message"></p>
+            <button id = "return-booking" disabled>Confirm return</button>
+        </div>
+    </div>
+    <script>
+        const booking_id = document.getElementById("item-list").dataset.bookingId
+        const confirmButton = document.getElementById("return-booking")
+        const text = document.getElementById("data-store").dataset.loanItems
+        const loan_items = JSON.parse(text)
+        const scan_message = document.getElementById("message")
+        const barcode_input = document.getElementById("barcode-input")
+        const scanned_assets = []
+        barcode_input.addEventListener("keydown", function (event) {
+            if (event.key === "Enter"){
+                const scanned = barcode_input.value.trim().toUpperCase();
+                barcode_input.value = ""
+                scan_message.textContent = ""
+                if (loan_items.some(asset => asset["asset_barcode"] === scanned)){
+                    if (scanned_assets.includes(scanned)){
+                        scan_message.textContent = "Item already scanned"
+                    } else{
+                        scanned_assets.push(scanned)
+                        updateProgress()
+                        const row = document.querySelector(`tr.waiting[data-asset-barcode="${scanned}"]`) 
+                        row.classList.remove('waiting');
+                        row.classList.add('scanned');
+                    }
+                } else{
+                    scan_message.textContent = "This item is not in the booking."
+                }
+                if (scanned_assets.length == loan_items.length){
+                    confirmButton.disabled = false;
+                }
+            }
+        });
+
+        function updateProgress(){
+            document.getElementById("scanned_quantity").textContent = scanned_assets.length
+            document.getElementById("progress-fill").style.width = (scanned_assets.length/loan_items.length)*100 + "%"
+        }
+
+        confirmButton.addEventListener('click', function(){
+            confirmButton.disabled = true;
+            confirmButton.textContent = "Loading..."
+            
+
+            fetch("/confirm_return", {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    "items": scanned_assets,
+                    "booking_id": booking_id
+                })
+            })
+            .then(response => {
+                if (response.ok){
+                    alert("Successfully returned!")
+                }
+                return response.json()
+            })
+            .then(data => {
+                if (data.success == false){
+                    alert(data.message)
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Couldn't reach the server, returned assets may not have been updated")
+            })
+            .finally(() => {
+                //add conditionals for this depending on result
+                confirmButton.disabled = false;
+                confirmButton.textContent = "Confirm return"
+            });
+            
+        })
+
+    </script>
+
+{% endblock %}

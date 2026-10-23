@@ -69,19 +69,40 @@ def fetch_data():
 @admin_home.route('/check_out/<int:booking_id>')
 @login_required
 def check_out(booking_id):
+    loan_items = []
     if current_user.role != UserRole.ADMIN:
         abort(403)
     else:
         if db.session.execute(select(EquipmentLoan.status).where(EquipmentLoan.id == booking_id)).scalar() != LoanStatus.CONFIRMED:
-            print("ERROR")
+            print("ERROR") #need a browser message
         else:
             equip_loan_objs = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id == booking_id)).scalars().all()
-            loan_items = []
             for object in equip_loan_objs:
                 item = dict(loan_item_id = object.id, equip_type_id = object.fk_equipment_type_id, name = equip_type_lookup(object.fk_equipment_type_id), asset_barcode = None)
                 loan_items.append(item)
             
     return render_template("admin/check_out.html", booking_id = booking_id, items = loan_items)
+
+@admin_home.route('/return/<int:booking_id>')
+@login_required
+def equip_return(booking_id):
+    loan_items = []
+    if current_user.role != UserRole.ADMIN:
+        abort(403)
+    else:
+        booking_status = db.session.execute(select(EquipmentLoan.status).where(EquipmentLoan.id == booking_id)).scalar() 
+        if booking_status not in (LoanStatus.CHECKEDOUT, LoanStatus.OVERDUE):
+            print(booking_status)
+            print("ERROR to be fixed") #need a browser message
+        else:
+            equip_loan_objs = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id == booking_id)).scalars().all()
+            for object in equip_loan_objs:
+                item = dict(loan_item_id = object.id, equip_type_id = object.fk_equipment_type_id, name = equip_type_lookup(object.fk_equipment_type_id), asset_barcode = object.fk_asset_barcode)
+                loan_items.append(item)
+    return render_template("admin/equip_return.html", booking_id = booking_id, items = loan_items)
+
+#next to do: add equip return function
+#need to display asset code and change conditionals 
 
 @admin_home.route('/fetch_equip_type')
 @login_required
@@ -90,7 +111,6 @@ def fetch_equip_type():
         abort(403)
     else:
         input_barcode = request.args.get('barcode').upper() #gets the value of date from url
-        print(input_barcode)
         if not input_barcode: #if the value is missing, return empty list so no error
             return jsonify([])
         equip_type_id = db.session.execute(select(Asset.fk_equipment_type_id).where(Asset.barcode == input_barcode)).scalar()
@@ -108,22 +128,19 @@ def confirm_check_out():
             return jsonify({'success': False, 'message': "Data not recieved"}),400
         #error checking: does the loan exist and is still confirmed?
         booking_id = db.session.execute(select(EquipmentLoanItem.fk_loan_id).where(EquipmentLoanItem.id == data[0]["loan_item_id"])).scalar()
-        print("DEBUG",data[0]["loan_item_id"])
         if booking_id is None:
             return jsonify({'success': False, 'message': "Booking not found"}),404
         status = db.session.execute(select(EquipmentLoan.status).where(EquipmentLoan.id == booking_id)).scalar()
         if status != LoanStatus.CONFIRMED:
-            print(status)
-            print(booking_id)
             return jsonify({'success': False, 'message': f"This booking is {status.value}, not confirmed (ready to check out)"}),409
-        for item in data: #update loan items with correct asset id 
+        for item in data: #asset checks
             asset_id = db.session.execute(select(Asset.id).where(Asset.barcode == item["barcode"])).scalar()
             if asset_id is None:
                 return jsonify({'success': False, 'message': f"Asset {item['barcode']} does not exist"}),404
             asset_status = db.session.execute(select(Asset.status).where(Asset.barcode == item["barcode"])).scalar()
             #check if asset status is avaliable
             if asset_status != AssetStatus.AVAILABLE:
-                return jsonify({'success': False, 'message': f"Asset {item["barcode"]} is not available"}),409
+                return jsonify({'success': False, 'message': f"Asset {item['barcode']} is not available"}),409
         try:
             for item in data: #update loan items with correct asset id     
                 update_loan_item = update(EquipmentLoanItem).where(EquipmentLoanItem.id == item["loan_item_id"]).values(fk_asset_barcode = item["barcode"])
@@ -136,12 +153,55 @@ def confirm_check_out():
                 db.session.execute(update_loan)
             db.session.commit()
             print("success update")
-            return jsonify({"success":True, "message":"success"})
+            return jsonify({"success":True, "message":None})
         except Exception as e:
             current_app.logger.exception(e)
             db.session.rollback()
             return jsonify({'success': False, 'message': "Failed to update to database. Please try again."}),500
-    
+
+@admin_home.route('/confirm_return', methods=['POST'])
+@login_required
+def confirm_return():
+    if current_user.role != UserRole.ADMIN:
+        abort(403)
+    else:
+        data = request.json
+        #error checking: was data recieved?
+        if data == None or not (isinstance(data, dict)) or not data:
+            return jsonify({'success': False, 'message': "Data not recieved"}),400
+        #error checking: does the loan exist and is still confirmed?
+        booking_id = data.get("booking_id")
+        if booking_id is None:
+            return jsonify({'success': False, 'message': "Booking id not recieved"}),400
+        status = db.session.execute(select(EquipmentLoan.status).where(EquipmentLoan.id == booking_id)).scalar()
+        if status is None:
+            return jsonify({'success': False, 'message': "Booking not found"}),404
+        if status not in (LoanStatus.CHECKEDOUT, LoanStatus.OVERDUE):
+            return jsonify({'success': False, 'message': f"This booking is {status.value}, not checkedout (ready for return)"}),409
+        for item_barcode in data["items"]: #asset checks
+            asset_id = db.session.execute(select(Asset.id).where(Asset.barcode == item_barcode)).scalar()
+            if asset_id is None:
+                return jsonify({'success': False, 'message': f"Asset {item_barcode} does not exist"}),404
+            asset_status = db.session.execute(select(Asset.status).where(Asset.barcode == item_barcode)).scalar()
+            #check if asset status is unavaliable (as should be)
+            if asset_status != AssetStatus.UNAVAILABLE:
+                return jsonify({'success': False, 'message': f"Asset {item_barcode} was not checked out."}),409
+        try:
+            for item_barcode in data["items"]: #update asset status
+                #update asset statuses
+                update_asset = update(Asset).where(Asset.barcode == item_barcode).values(status = AssetStatus.AVAILABLE)
+                #update loan status
+                update_loan = update(EquipmentLoan).where(EquipmentLoan.id == booking_id).values(status = LoanStatus.FINISHED)
+                db.session.execute(update_loan)
+                db.session.execute(update_asset)
+            db.session.commit()
+            print("success update")
+            return jsonify({"success":True, "message":None})
+        except Exception as e:
+            current_app.logger.exception(e)
+            db.session.rollback()
+            return jsonify({'success': False, 'message': "Failed to update to database. Please try again."}),500
+
 
 @admin_home.route('/update_loan_status', methods=['POST'])
 @login_required
@@ -237,10 +297,8 @@ def get_student_email(booking_type, booking_id):
         return user_email, None, user_name, book_date, book_content, reject_reason
 
 def send_booking_email(action, booking_id, user_email, user_name, book_date, book_content, reason):
-    print("DEBUG",reason)
     if action == "approve":
         msg = Message(f"Booking confirmed (#{booking_id})",sender = os.getenv("DEL_EMAIL"),recipients=[user_email]) 
-        print(type(book_content))
         msg.html = render_template("admin/booking_success_email.html", name = user_name, booking_id = booking_id, book_date = book_date, book_content = book_content)
     elif action == "remind":
         msg = Message(f"Booking #{booking_id} overdue", sender = os.getenv("DEL_EMAIL"),recipients=[user_email]) 

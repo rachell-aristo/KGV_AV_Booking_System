@@ -250,7 +250,7 @@
                     <button id = "reject" style = "display: none">Reject</button>
                     <!-- only appear if loan is not approved -->
                     <button id = "checkOut" style = "display: none">Check Out</button>
-                    <button id = "checkIn" style = "display: none">Check In</button>
+                    <button id = "return" style = "display: none">Return</button>
                     <button id = "cancel" style = "display: none">Cancel</button>  
                     <button id = "remind" style = "display: none">Remind</button> 
                 </div>
@@ -417,8 +417,7 @@
         const equipReject = document.querySelector("#equipModal #reject");
         const equipCancel = document.querySelector("#equipModal #cancel");
         const equipCheckOut = document.querySelector("#equipModal #checkOut");
-        const equipCheckIn = document.querySelector("#equipModal #checkIn");
-        const equipIn = document.querySelector("#equipModal #checkIn");
+        const equipReturn = document.querySelector("#equipModal #return");
         const equipRemind = document.querySelector("#equipModal #remind");
 
         const studioApprove = document.querySelector("#studioModal #approve");
@@ -436,8 +435,8 @@
             equipCancel.textContent = "Cancel"
             equipCheckOut.disabled = false;
             equipCheckOut.textContent = "Check Out"
-            equipCheckIn.disabled = false;
-            equipCheckIn.textContent = "Check In"
+            equipReturn.disabled = false;
+            equipReturn.textContent = "Check In"
             equipRemind.disabled = false;
             equipRemind.textContent = "Remind"
 
@@ -460,12 +459,14 @@
                 equipReject.style.display = "none";
                 equipCancel.style.display = "block";
                 equipCheckOut.style.display = "block";
+                equipReturn.style.display = "none";
                 equipRemind.style.display = "none";
             } else if (type == "STUDIO"){
                 studioApprove.style.display = "none";
                 studioReject.style.display = "none";
                 studioCancel.style.display = "block";
                 studioCheckOut.style.display = "block";
+                equipReturn.style.display = "none";
                 studioRemind.style.display = "none";
             }
             
@@ -477,12 +478,14 @@
                 equipReject.style.display = "block";
                 equipCancel.style.display = "none";
                 equipCheckOut.style.display = "none";
+                equipReturn.style.display = "none";
                 equipRemind.style.display = "none";
             } else if (type == "STUDIO"){
                 studioApprove.style.display = "block";
                 studioReject.style.display = "block";
                 studioCancel.style.display = "none";
                 studioCheckOut.style.display = "none";
+                equipReturn.style.display = "none";
                 studioRemind.style.display = "none";
             }
         }
@@ -493,20 +496,26 @@
                 equipReject.style.display = "none";
                 equipCancel.style.display = "none";
                 equipCheckOut.style.display = "none";
+                equipReturn.style.display = "block";
                 equipRemind.style.display = "block";
             } else if (type == "STUDIO"){
                 studioApprove.style.display = "none";
                 studioReject.style.display = "none";
                 studioCancel.style.display = "none";
                 studioCheckOut.style.display = "none";
+                equipReturn.style.display = "none";
                 studioRemind.style.display = "block";
             }
         }
-        //next step, add check in buttons to loans with status 'checkedout'
 
         function checkOutButtons(type){
             if (type == "EQUIP"){
-                equipCheckIn.style.display = "block"
+                equipApprove.style.display = "none";
+                equipReject.style.display = "none";
+                equipCancel.style.display = "none";
+                equipCheckOut.style.display = "none";
+                equipReturn.style.display = "block"
+                equipRemind.style.display = "none";
             }
         }
 
@@ -516,12 +525,14 @@
                 equipReject.style.display = "none";
                 equipCancel.style.display = "none";
                 equipCheckOut.style.display = "none";
+                equipReturn.style.display = "none";
                 equipRemind.style.display = "none";
             } else if (type == "STUDIO"){
                 studioApprove.style.display = "none";
                 studioReject.style.display = "none";
                 studioCancel.style.display = "none";
                 studioCheckOut.style.display = "none";
+                equipReturn.style.display = "none";
                 studioRemind.style.display = "none";
             }
         }
@@ -577,6 +588,8 @@
                     
                 } else if (recIdObject.status == "overdue"){
                     overdueButtons("EQUIP");
+                } else if (recIdObject.status == "checkedout"){
+                    checkOutButtons("EQUIP")
                 } else{
                     noButtons("EQUIP");
                 };
@@ -626,6 +639,13 @@
         equipCheckOut.addEventListener('click',function(){
             const bookingId = recId
             const url = `/check_out/${bookingId}`
+            window.location.href = url
+        })
+
+        //Check in equip functionality
+        equipReturn.addEventListener('click',function(){
+            const bookingId = recId
+            const url = `/return/${bookingId}`
             window.location.href = url
         })
 

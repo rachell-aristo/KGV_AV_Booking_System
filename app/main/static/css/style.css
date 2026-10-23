@@ -1071,3 +1071,39 @@ tr.scanned td:first-child {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------------------------- Equipment return ---------------------------- */
+
+.return-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.return-layout .card {
+  margin-bottom: 0;
+}
+
+.return-items table {
+  margin: 0;
+}
+
+.return-items tr:last-child td {
+  border-bottom: none;
+}
+
+.return-items td:first-child {
+  border-left: 3px solid transparent;
+}
+
+/* soft fade when a row turns green */
+.return-items td {
+  transition: background-color 0.25s ease;
+}
+
+@media (max-width: 768px) {
+  .return-layout {
+    grid-template-columns: 1fr;
+  }
+}
