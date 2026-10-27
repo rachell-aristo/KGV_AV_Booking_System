@@ -15,10 +15,260 @@
 
     <!-- DASHBOARD CONTENT -->
     <div class="tabcontent active" data-page = "dashboard" id="dashboard"  style = "display: block">
-        <h1>Dashboard</h1>
-        <h2>Today's bookings</h2>
-        <h2>New bookings</h2>
-        <h2>Overdue loans</h2>
+        <h1>Today's bookings</h1>
+        <h3>Equipment Bookings</h3>
+        <div class = "filter-container">
+            <div class="panel panel-primary filterable">
+                <div><button class="filter-btn">Filter</button></div>
+                <table id = "equipTable">
+                    <!-- FILTER BUTTONS EQUIPMENT TABLE -->
+                    <tr class = "filters" style="display: none;">
+                        <th><input type="text" placeholder="Booking ID" disabled></th>
+                        <th><input type="text" placeholder="User" disabled></th>
+                        <th><input type="text" placeholder="Request Date" disabled></th>
+                        <th><input type="text" placeholder="Loan Period" disabled></th>
+                        <th><input type="text" placeholder="Items:" disabled></th>
+                        <th><input type="text" placeholder="Status" disabled></th>
+                    </tr>
+                    <tr class = "headings">
+                        <th>Booking ID</th>
+                        <th>User</th>
+                        <th>Request Date</th>
+                        <th>Loan Period</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                    </tr>
+                    <!-- EQUIPMENT TABLE RECORDS -->
+                    <tbody id="equip-table-body">
+                        {% for record in equip_bookings %}
+                            {% if record.loan_start_date == today_date and (record.status.value | upper == "PENDING" or record.status.value | upper == "CONFIRMED") %}
+                                <tr class = "equipRecord" data-id = "{{record.id}}">
+                                    <td>{{record.id}}</td>
+                                    <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
+                                    <td>{{record.created.strftime("%b %d")}}</td>
+                                    <td>{{record.loan_start_date.strftime("%b %d")}} - {{record.loan_end_date.strftime("%b %d")}}</td>
+                                    <td>
+                                        {% for bookingId, items in loan_items.items() %}
+                                            {% if bookingId == record.id %}
+                                                {% for type, quantity in items.items() %}
+                                                    ×{{quantity}} {{type_lookup.get(type)}} {% if not loop.last %} • {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    
+                                    <td>
+                                        <span class="status status-{{ record.status.value | lower }}">
+                                            {{ record.status.value | upper }}
+                                        </span>
+                                    </td>
+                                </tr>        
+                            {% endif %}                    
+                        {% endfor %}
+                    </tbody>
+                    <tr class="no-result" style="display: none;"><td colspan="5">No result found</td></tr>
+                </table>     
+            </div>
+        </div>
+        <div class = "filter-container">
+            <h3>Studio Bookings</h3>
+            <div class="panel panel-primary filterable">
+                <div><button class="filter-btn">Filter</button></div>
+                <table id = "studioTable">
+                    <!-- FILTER BUTTONS STUDIO TABLE -->
+                    <tr class = "filters" style="display: none;">
+                        <th><input type="text" placeholder="Booking ID" disabled></th>
+                        <th><input type="text" placeholder="User" disabled></th>
+                        <th><input type="text" placeholder="Studio Space" disabled></th>
+                        <th><input type="text" placeholder="Slot" disabled></th>
+                        <th><input type="text" placeholder="Booked Date" disabled></th>
+                        <th><input type="text" placeholder="Status" disabled></th>
+                    </tr>
+                    <tr class = "headings">
+                        <th>Booking ID</th>
+                        <th>User</th>
+                        <th>Studio Space</th>
+                        <th>Slot</th>
+                        <th>Booked Date</th>
+                        <th>Status</th>
+                    </tr>
+                    <!-- STUDIO TABLE RECORDS -->
+                    <tbody id="studio-table-body">
+                        {% for record in s_studio_bookings %}
+                            {% if record.booking_date == today_date and (record.status.value | upper == "PENDING" or record.status.value | upper == "CONFIRMED")%}
+                                <tr class = "studioRecord" data-id = "{{record.id}}">
+                                    <td>{{record.id}}</td>
+                                    <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
+                                    <td>{{studio_lookup.get(record.fk_studio_space_id,'Unknown Space')}}</td>
+                                    <td>{{slot_lookup.get(record.fk_slot_id,"Unknown Timeslot")}}</td>
+                                    <td>{{record.booking_date.strftime("%b %d, %Y")}}</td>
+                                    <td>
+                                        <span class="status status-{{ record.status.value | lower }}">
+                                            {{ record.status.value | upper }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                    <tr class="no-result" style="display: none;"><td colspan="6">No result found</td></tr>
+                </table>
+            </div>
+        </div>
+        <h1>New bookings</h1>
+        <h3>Equipment Bookings</h3>
+        <div class = "filter-container">
+            <div class="panel panel-primary filterable">
+                <div><button class="filter-btn">Filter</button></div>
+                <table id = "equipTable">
+                    <!-- FILTER BUTTONS EQUIPMENT TABLE -->
+                    <tr class = "filters" style="display: none;">
+                        <th><input type="text" placeholder="Booking ID" disabled></th>
+                        <th><input type="text" placeholder="User" disabled></th>
+                        <th><input type="text" placeholder="Request Date" disabled></th>
+                        <th><input type="text" placeholder="Loan Period" disabled></th>
+                        <th><input type="text" placeholder="Items:" disabled></th>
+                        <th><input type="text" placeholder="Status" disabled></th>
+                    </tr>
+                    <tr class = "headings">
+                        <th>Booking ID</th>
+                        <th>User</th>
+                        <th>Request Date</th>
+                        <th>Loan Period</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                    </tr>
+                    <!-- EQUIPMENT TABLE RECORDS -->
+                    <tbody id="equip-table-body">
+                        {% for record in equip_bookings %}
+                            {% if record.status.value | upper == "PENDING" %}
+                                <tr class = "equipRecord" data-id = "{{record.id}}">
+                                    <td>{{record.id}}</td>
+                                    <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
+                                    <td>{{record.created.strftime("%b %d")}}</td>
+                                    <td>{{record.loan_start_date.strftime("%b %d")}} - {{record.loan_end_date.strftime("%b %d")}}</td>
+                                    <td>
+                                        {% for bookingId, items in loan_items.items() %}
+                                            {% if bookingId == record.id %}
+                                                {% for type, quantity in items.items() %}
+                                                    ×{{quantity}} {{type_lookup.get(type)}} {% if not loop.last %} • {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    
+                                    <td>
+                                        <span class="status status-{{ record.status.value | lower }}">
+                                            {{ record.status.value | upper }}
+                                        </span>
+                                    </td>
+                                </tr>        
+                            {% endif %}                    
+                        {% endfor %}
+                    </tbody>
+                    <tr class="no-result" style="display: none;"><td colspan="5">No result found</td></tr>
+                </table>     
+            </div>
+        </div>
+        <div class = "filter-container">
+            <h3>Studio Bookings</h3>
+            <div class="panel panel-primary filterable">
+                <div><button class="filter-btn">Filter</button></div>
+                <table id = "studioTable">
+                    <!-- FILTER BUTTONS STUDIO TABLE -->
+                    <tr class = "filters" style="display: none;">
+                        <th><input type="text" placeholder="Booking ID" disabled></th>
+                        <th><input type="text" placeholder="User" disabled></th>
+                        <th><input type="text" placeholder="Studio Space" disabled></th>
+                        <th><input type="text" placeholder="Slot" disabled></th>
+                        <th><input type="text" placeholder="Booked Date" disabled></th>
+                        <th><input type="text" placeholder="Status" disabled></th>
+                    </tr>
+                    <tr class = "headings">
+                        <th>Booking ID</th>
+                        <th>User</th>
+                        <th>Studio Space</th>
+                        <th>Slot</th>
+                        <th>Booked Date</th>
+                        <th>Status</th>
+                    </tr>
+                    <!-- STUDIO TABLE RECORDS -->
+                    <tbody id="studio-table-body">
+                        {% for record in s_studio_bookings %}
+                            {% if record.status.value | upper == "PENDING" %}
+                                <tr class = "studioRecord" data-id = "{{record.id}}">
+                                    <td>{{record.id}}</td>
+                                    <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
+                                    <td>{{studio_lookup.get(record.fk_studio_space_id,'Unknown Space')}}</td>
+                                    <td>{{slot_lookup.get(record.fk_slot_id,"Unknown Timeslot")}}</td>
+                                    <td>{{record.booking_date.strftime("%b %d, %Y")}}</td>
+                                    <td>
+                                        <span class="status status-{{ record.status.value | lower }}">
+                                            {{ record.status.value | upper }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                    <tr class="no-result" style="display: none;"><td colspan="6">No result found</td></tr>
+                </table>
+            </div>
+        </div>
+        <h1>Overdue loans</h1>
+        <div class = "filter-container">
+            <div class="panel panel-primary filterable">
+                <div><button class="filter-btn">Filter</button></div>
+                <table id = "equipTable">
+                    <!-- FILTER BUTTONS EQUIPMENT TABLE -->
+                    <tr class = "filters" style="display: none;">
+                        <th><input type="text" placeholder="Booking ID" disabled></th>
+                        <th><input type="text" placeholder="User" disabled></th>
+                        <th><input type="text" placeholder="Request Date" disabled></th>
+                        <th><input type="text" placeholder="Loan Period" disabled></th>
+                        <th><input type="text" placeholder="Items:" disabled></th>
+                        <th><input type="text" placeholder="Status" disabled></th>
+                    </tr>
+                    <tr class = "headings">
+                        <th>Booking ID</th>
+                        <th>User</th>
+                        <th>Request Date</th>
+                        <th>Loan Period</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                    </tr>
+                    <!-- EQUIPMENT TABLE RECORDS -->
+                    <tbody id="equip-table-body">
+                        {% for record in equip_bookings %}
+                            {% if record.status.value | upper == "OVERDUE" %}
+                                <tr class = "equipRecord" data-id = "{{record.id}}">
+                                    <td>{{record.id}}</td>
+                                    <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
+                                    <td>{{record.created.strftime("%b %d")}}</td>
+                                    <td>{{record.loan_start_date.strftime("%b %d")}} - {{record.loan_end_date.strftime("%b %d")}}</td>
+                                    <td>
+                                        {% for bookingId, items in loan_items.items() %}
+                                            {% if bookingId == record.id %}
+                                                {% for type, quantity in items.items() %}
+                                                    ×{{quantity}} {{type_lookup.get(type)}} {% if not loop.last %} • {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    
+                                    <td>
+                                        <span class="status status-{{ record.status.value | lower }}">
+                                            {{ record.status.value | upper }}
+                                        </span>
+                                    </td>
+                                </tr>        
+                            {% endif %}                    
+                        {% endfor %}
+                    </tbody>
+                    <tr class="no-result" style="display: none;"><td colspan="5">No result found</td></tr>
+                </table>     
+            </div>
+        </div>
     </div>
 
     <!-- ASSETS CONTENT -->

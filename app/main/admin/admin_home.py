@@ -4,6 +4,8 @@ from ..extensions import db, mail
 from ..models import User, LoanStatus, UserRole, StudioBooking, EquipmentCategory, Asset, EquipmentLoan, StudioSpace, TimeSlot, StudioBookingStatus, EquipmentType, StudioBookingSetupSelection, EquipmentLoanItem, AssetStatus
 from ..utils import count_equip_booking_items, equip_type_lookup, studio_type_lookup, slot_type_lookup, studio_setup_lookup
 import os
+from datetime import date
+
 
 from flask_login import login_required, current_user
 from sqlalchemy import select, update
@@ -60,7 +62,7 @@ def fetch_data():
                             user_lookup = user_lookup, s_users = serialized_users,
                             loan_items = loan_items, type_lookup = type_lookup, s_equip_bookings = serialized_equip_bookings,
                             studio_lookup = studio_lookup, slot_lookup = slot_lookup, s_assets = serialized_assets,
-                            type_to_cat_lookup = type_to_cat_lookup, loan_status = loan_status
+                            type_to_cat_lookup = type_to_cat_lookup, loan_status = loan_status, today_date = date.today()
                             )
 
 
