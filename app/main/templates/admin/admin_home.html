@@ -1103,15 +1103,15 @@
                             //add new class status to record
                             if (data.email_sent === true){
                                 if (newStatus == 'confirmed'){
-                                    alert("Equipment booking #"+id+" has been approved and an email has been sent.")
+                                    alert("Equipment booking #"+id+" has been approved and an email has been sent. (not actually sent for Stardance review)")
                                     confirmedButtons("EQUIP");
                                     enableButtons()
                                 } else if (newStatus == "rejected"){
-                                    alert("Equipment booking #"+id+" has been rejected and an email has been sent.")
+                                    alert("Equipment booking #"+id+" has been rejected and an email has been sent. (not actually sent for Stardance review)")
                                     noButtons("EQUIP");
                                     enableButtons()
                                 } else if (newStatus == "canceled"){
-                                    alert("Equipment booking #"+id+" has been canceled and an email has been sent.")
+                                    alert("Equipment booking #"+id+" has been canceled and an email has been sent. (not actually sent for Stardance review)")
                                     noButtons("EQUIP");
                                     enableButtons()
                                 }
@@ -1148,15 +1148,15 @@
                             
                             if (data.email_sent === true){
                                 if (newStatus == 'confirmed'){
-                                    alert("Studio booking #"+id+" has been approved and an email has been sent.")
+                                    alert("Studio booking #"+id+" has been approved and an email has been sent. (not actually sent for Stardance review)")
                                     confirmedButtons("STUDIO");
                                     enableButtons()
                                 } else if (newStatus == "rejected"){
-                                    alert("Studio booking #"+id+" has been rejected and an email has been sent.")
+                                    alert("Studio booking #"+id+" has been rejected and an email has been sent. (not actually sent for Stardance review)")
                                     noButtons("STUDIO");
                                     enableButtons()
                                 } else if (newStatus == "canceled"){
-                                    alert("Studio booking #"+id+" has been canceled and an email has been sent.")
+                                    alert("Studio booking #"+id+" has been canceled and an email has been sent. (not actually sent for Stardance review)")
                                     noButtons("STUDIO");
                                     enableButtons()
                                 }

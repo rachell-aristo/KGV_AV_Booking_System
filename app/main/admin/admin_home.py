@@ -321,7 +321,7 @@ def send_booking_email(action, booking_id, user_email, user_name, book_date, boo
     else:
         return False, "Unknown action, email not sent"
     try:
-        mail.send(msg)
+        # mail.send(msg) turned off for stardance
         print("Email sent!")
         return True, None
     except Exception as e:
@@ -349,7 +349,7 @@ def send_email():
         success, message = send_booking_email(action, record_id, email, name, book_date, book_content, reject_reason)
 
         if success:
-            return jsonify({'success': True, 'message': "Email sent"})
+            return jsonify({'success': True, 'message': "Email sent (not actually sent for Stardance review)"})
         else:
             return jsonify({'success': False, 'message': message}), 500
 
