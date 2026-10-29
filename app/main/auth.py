@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for, session, request, abort
+from flask import Blueprint, redirect, url_for, session, request, request
 from flask_login import LoginManager, login_required, logout_user, login_user
 from urllib.parse import urljoin, urlparse
 from authlib.integrations.flask_client import OAuth
@@ -10,6 +10,8 @@ from functools import wraps #decorator useful for creating decorator
 from sqlalchemy import select
 import os
 from datetime import datetime
+import uuid
+
 
 
 auth = Blueprint('auth', __name__)
@@ -28,20 +30,27 @@ google = oauth.register(
     created = datetime.now()
 )
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-# def login_required(f): 
-#     """Checks if user is logged in"""
-#     @wraps(f) #copies metadata from f to decorated_function
-#     def decorated_function(*args, **kwargs): 
-#         #this is a wrapper function and it's needed or else this check would 
-#         # run everytime we decorate a function, not when we call the base function
-#         if session.get('user_id') is None:
-#             return redirect(url_for('index'))
-#         return f(*args, **kwargs)
-#     return decorated_function #we return decorated function so that we can run the base function
+@auth.route('/guest_login')
+def guest_login():
+    role = request.args.get('role')
+    if role == "admin":
+        role_enum = UserRole.ADMIN
+    elif role == "student":
+        role_enum = UserRole.STUDENT
+    token = uuid.uuid4().hex[:8]
+    user = User(
+    google_sub_id = "test_guest_"+token, name="guest_"+token, 
+    email="admin_guest"+token+"@example.com", role = role_enum, year_group = 7,
+    created = datetime.now())
+    db.session.add(user) #stages the new user record
+    db.session.commit() #commits the new user record
+    login_user(user)
+    return redirect(url_for('index'))
 
 @auth.route('/login') #'auth' here specifies that this route belongs to the module auth
 def login():
