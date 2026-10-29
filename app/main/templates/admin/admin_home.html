@@ -899,6 +899,45 @@
             window.location.href = url
         })
 
+        //Check out studio functionality (come back to double check understanding later)
+        studioCheckOut.addEventListener('click', function(){
+            const bookingId = recId
+            fetch("/studio_check_out", {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ "booking_id": bookingId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success == true){
+                    recIdObject.status = "finished";
+
+                    // modal
+                    document.querySelector("#studioModal #modalStatus").textContent = "FINISHED";
+
+                    // every table row for this booking (it can appear in more than one table)
+                    document.querySelectorAll('.studioRecord[data-id="' + bookingId + '"] .status').forEach(function(statusSpan){
+                        statusSpan.textContent = "FINISHED";
+                        for (const attribute of Array.from(statusSpan.classList)){
+                            if (attribute.startsWith("status-")){
+                                statusSpan.classList.remove(attribute);
+                            }
+                        }
+                        statusSpan.classList.add("status-finished");
+                    });
+
+                    noButtons("STUDIO");   // hide the Check Out button
+                    alert("Booking successfully finished!");
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Couldn't reach the server, booking status may not be updated");
+            });
+        });
+
         document.getElementById('equip-edit-save').addEventListener('click',function(){
             const items = [];
             const itemsContainer = document.getElementById("edit-modalItems")

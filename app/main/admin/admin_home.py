@@ -65,7 +65,6 @@ def fetch_data():
                             type_to_cat_lookup = type_to_cat_lookup, loan_status = loan_status, today_date = date.today()
                             )
 
-
 @admin_home.route('/check_out/<int:booking_id>')
 @login_required
 def check_out(booking_id):
@@ -86,9 +85,7 @@ def check_out(booking_id):
                 item = dict(loan_item_id = object.id, equip_type_id = object.fk_equipment_type_id, name = equip_type_lookup(object.fk_equipment_type_id), asset_barcode = None)
                 loan_items.append(item)
             overdue_loans = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == user_id, EquipmentLoan.status == LoanStatus.OVERDUE)).scalars().all()
-            print(type(overdue_loans),overdue_loans)                
             booking_counts = count_equip_booking_items(overdue_loans)
-            print('dbug',user_name)
     return render_template("admin/check_out.html", booking_id = booking_id, items = loan_items, 
                            booking_counts = booking_counts, equip_type_lookup = type_lookup, user_name = user_name)
 
@@ -101,7 +98,6 @@ def equip_return(booking_id):
     else:
         booking_status = db.session.execute(select(EquipmentLoan.status).where(EquipmentLoan.id == booking_id)).scalar() 
         if booking_status not in (LoanStatus.CHECKEDOUT, LoanStatus.OVERDUE):
-            print(booking_status)
             print("ERROR to be fixed") #need a browser message
         else:
             equip_loan_objs = db.session.execute(select(EquipmentLoanItem).where(EquipmentLoanItem.fk_loan_id == booking_id)).scalars().all()
@@ -211,6 +207,24 @@ def confirm_return():
             db.session.rollback()
             return jsonify({'success': False, 'message': "Failed to update to database. Please try again."}),500
 
+#studio check out
+@admin_home.route('/studio_check_out',methods=['POST'])
+@login_required
+def studio_check_out():
+    if current_user.role != UserRole.ADMIN:
+        abort(403)
+    else:
+        data = request.json
+        if data == None or not (isinstance(data, dict)) or not data:
+            return jsonify({'success': False, 'message': "Data not recieved"}),400
+        #error checking: does the loan exist and is still confirmed?
+        booking_id = data.get("booking_id")
+        if booking_id is None:
+            return jsonify({'success': False, 'message': "Booking id not recieved"}),400
+        update_loan = update(StudioBooking).where(StudioBooking.id == booking_id).values(studio_booking_status = StudioBookingStatus.FINISHED)
+        db.session.execute(update_loan)
+        db.session.commit()
+        return jsonify({"success":True, "message":None})
 
 @admin_home.route('/update_loan_status', methods=['POST'])
 @login_required
