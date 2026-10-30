@@ -1,6 +1,8 @@
 from flask import Flask, render_template, session, redirect, url_for
 from flask_login import current_user, login_required
 from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
+import certifi
 import os
 from app.main.extensions import db, mail
 from app.main.models import *
@@ -23,7 +25,15 @@ from app.main.admin.admin_home import admin_home
 load_dotenv() #loads values from .env file into here so can access
 
 app = Flask(__name__) #Creates this file as a Flask application
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1) #trusts Render's proxy headers so url_for(_external=True) builds https:// links (needed for Google login)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL') #sets the app's values to the things in .env so not hard coded
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "connect_args": { #TiDB requires SSL. certifi's CA bundle works on any OS (Mac locally, Linux on Render)
+        "ssl_ca": certifi.where(),
+        "ssl_verify_cert": True,
+        "ssl_verify_identity": True,
+    }
+}
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config["SESSION_PERMANENT"] = False #Sessions expire when the browser is closed
 
