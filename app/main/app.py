@@ -28,6 +28,8 @@ app = Flask(__name__) #Creates this file as a Flask application
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1) #trusts Render's proxy headers so url_for(_external=True) builds https:// links (needed for Google login)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL') #sets the app's values to the things in .env so not hard coded
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True, #checks a connection still works before using it (TiDB closes idle ones)
+    "pool_recycle": 300, #replaces connections older than 5 minutes
     "connect_args": { #TiDB requires SSL. certifi's CA bundle works on any OS (Mac locally, Linux on Render)
         "ssl_ca": certifi.where(),
         "ssl_verify_cert": True,

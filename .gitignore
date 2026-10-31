@@ -218,3 +218,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Vercel (public/ is built from app/main/static)
+.vercel
+/public/
