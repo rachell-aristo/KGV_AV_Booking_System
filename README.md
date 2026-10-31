@@ -10,7 +10,7 @@ https://kgv-av-booking-system.vercel.app/**
 **STARDANCE REVIEWERS, PLEASE NOTE:**
 Normally, my system would use Google login for our school, but I disabled it for Stardance review, since reviewers don't have our school's email domain. Instead, you can log in as a guest student or guest admin. Everytime you log out, you will log in as a different guest/admin. 
 
-To try out all the functions, I recommend first logging in as a student to make some bookings, and then log out and log back in as an admin to check out the admin functions.
+To try out all the functions, I recommend first logging in as a student to make some bookings, and then log out and log back in as an admin to check out the admin functions. For checking out equipment, you will need to reference the Assets tab on the admin dashboard to find the right barcode. (can open that in another tab)
 
 As there currently isn't a feature to delete bookings, all bookings you make/actions you take as an admin will also show for other reviewers. PLEASE don't leave any offensive comments in the text boxes when booking! 🙏🥹
 
