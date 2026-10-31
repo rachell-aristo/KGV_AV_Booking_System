@@ -61,3 +61,4 @@ The page then only allows quantities up to that number. The other rules are chec
 I used Claude to help with the following:
 - Deployment setup - moving the database to TiDB Cloud and configuring the app to run on Vercel.
 - Debugging errors
+- Creating CSS 
