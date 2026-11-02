@@ -286,5 +286,18 @@ class ClassEnrollment(db.Model):
     def __repr__(self):
         return f'<ClassEnrollment {self.id}>'
 
+class Announcement(db.Model):
+     __tablename__ = 'announcement'
+     id = db.Column(db.Integer, primary_key=True)
+     fk_user_id = db.Column(ForeignKey("user.id"), nullable=False)
+     title = db.Column(db.String(255), nullable=True)
+     message = db.Column(db.String(500), nullable=False)
+     created = db.Column(db.DateTime, nullable=False)
+     start_date = db.Column(db.Date, nullable=False)
+     end_date = db.Column(db.Date, nullable=False)
 
+     __table_args__ = (
+             db.CheckConstraint('start_date <= end_date',name='ck_announcement_dates'),)
+     def __repr__(self):
+          return f'<Announcement {self.id} {self.message}>'
 

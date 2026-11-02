@@ -15,6 +15,7 @@
 
     <!-- DASHBOARD CONTENT -->
     <div class="tabcontent active" data-page = "dashboard" id="dashboard"  style = "display: block">
+        <button id ="announcement_button">Create an announcement</button>
         <h1>Today's bookings</h1>
         <h3>Equipment Bookings</h3>
         <div class = "filter-container">
@@ -508,6 +509,28 @@
         </div>
     </div>
 
+    
+    <!-- ANNOUNCEMENT MODAL -->
+    <div id = "announcement-modal" class = "modal">
+        <div class="modal-content">
+            <span class="close" id="announcement-modal-close">&times;</span>
+            <h1>Make an announcement</h1>
+            <div class="modal-body">
+                <label for="fname">Announcement title (optional)</label>
+                <textarea type = "text" id = "announcement-title" name = "announcement-title" placeholder = "Enter announcement title..."></textarea>
+                <label for="fname">Announcement message*</label>
+                <textarea required type = "text" id = "announcement-message" name = "announcement-message" placeholder = "Enter announcement message..." rows="3"></textarea>
+                <label>Select announcement start-date:</label>
+                <input placeholder = "mm/dd/yy" type = "date" id="announcement-start-date" min="" name = "announcement-start-date" required>
+                <label>Select announcement end-date:</label>
+                <input placeholder = "mm/dd/yy" type = "date" id="announcement-end-date" min="" name = "announcement-end-date" required>
+            </div>
+            <div class="modal-actions">
+                <button id = "announcement-done">Done</button>
+            </div>
+        </div>
+    </div>
+
     <!-- REJECT REASON MODAL -->
     <div id = "reject-modal" class = "modal">
         <div class="modal-content modal-sm">
@@ -567,6 +590,17 @@
         const typeLookup = {{ type_lookup | tojson | safe }};
         const loanStatus = {{ loan_status | tojson | safe }};
 
+        const announcement_start_fp = flatpickr("#announcement-start-date", {
+            minDate: "today",
+            allowInput:true,  altInput: true, altFormat: "F j, Y", dateFormat: "Y-m-d",
+            // how this works is if function returns true, date gets disabled. So it goes through dates dynamically, not pre determined all at once
+        });
+
+        const announcement_end_fp = flatpickr("#announcement-end-date", {
+            minDate: "today",
+            allowInput:true,  altInput: true, altFormat: "F j, Y", dateFormat: "Y-m-d",
+            // how this works is if function returns true, date gets disabled. So it goes through dates dynamically, not pre determined all at once
+        });
 
 
 
@@ -627,7 +661,66 @@
         
         });
 
+    
+        //Announcements modal
+        const announcement_button = document.querySelector("#announcement_button");
+        const announcement_modal = document.getElementById('announcement-modal')
+        announcement_button.addEventListener('click',function(){
+            announcement_modal.style.display = "flex";
+            console.log('success')
+        });
+        
+        const announcement_submit = document.getElementById('announcement-done')
+        announcement_submit.addEventListener('click',function(){
+            const announcement_title = document.getElementById('announcement-title');
+            const announcement_message = document.getElementById('announcement-message');
+            const start_date = document.getElementById('announcement-start-date').value;   // format: "2026-11-03"
+            const end_date   = document.getElementById('announcement-end-date').value;
             
+            if (!announcement_message.value) {
+                alert("Please enter an announcement message before proceeding.");
+                announcement_message.focus();
+                return; // Prevent the code below from running
+            } else {
+                announcement_modal.style.display = "none";
+                fetch('/new_announcement', { //next step - figure submission
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: announcement_title.value,
+                        message: announcement_message.value,
+                        start_date: start_date,
+                        end_date: end_date
+                    })
+                })
+                .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                        //conditional for this
+                        alert("Announcement posted!")
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Something went wrong.")
+                }); 
+            }
+            
+
+        })
+
+        // announcement modal close button
+        document.getElementById("announcement-modal-close").addEventListener('click', function() {
+            document.getElementById('announcement-modal').style.display = "none";
+            document.getElementById("announcement_message").value = "";
+            document.getElementById("annoncement_title").value = "";
+            //not sure why input not clearing
+        });
+        
+        
+
+        
 
         
             

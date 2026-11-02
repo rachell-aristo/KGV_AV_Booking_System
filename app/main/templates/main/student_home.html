@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Student Home{% endblock %}
 {% block content %}
+{% from "components/banner.html" import banner %}
+    <div id="announcement">
+        {% if announcements %}
+            {% for i in announcements %}
+                {% call banner (title = i.title or "", kind = "warning") %}
+                    <p>{{i.message}}</p>
+                {% endcall %}
+            {% endfor %}
+        {% endif %}
+    </div>
 
 <div class="page-header">
     <h1>Current bookings</h1>

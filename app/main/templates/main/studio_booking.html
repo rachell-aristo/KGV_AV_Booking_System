@@ -1,11 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Studio Booking{% endblock %}
 {% block content %}
+{% from "components/banner.html" import banner %}
+   <div id="announcement">
+      {% if announcements %}
+         {% for i in announcements %}
+               {% call banner (title = i.title or "", kind = "warning") %}
+                  <p>{{i.message}}</p>
+               {% endcall %}
+         {% endfor %}
+      {% endif %}
+   </div>
+
    <div id="booking-data" data-fully-booked='{{ fully_booked_days | tojson | safe }}'></div>
    <h1>Book a studio</h1>
  
-   
-
    <form action ="/submit_studio_booking" method = "POST">
       <label>Select date:</label>
             <input placeholder = "mm/dd/yy" type = "date" id="booking-date" min="" name = "booking-date" required>

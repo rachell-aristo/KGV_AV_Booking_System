@@ -1,7 +1,7 @@
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
 from flask_login import current_user
 from .extensions import db
-from .models import StudioSetupOptions, StudioSpace, TimeSlot, StudioBooking,StudioBookingStatus,StudioBookingSetupSelection, User, UserRole
+from .models import StudioSetupOptions, StudioSpace, TimeSlot, StudioBooking,StudioBookingStatus,StudioBookingSetupSelection, Announcement
 
 # from extensions import db
 # from models import StudioSetupOptions, StudioSpace, TimeSlot, StudioBooking,StudioBookingStatus,StudioBookingSetupSelection, User, UserRole
@@ -36,7 +36,12 @@ def data_fetch():
         if value >= len(time_slots): 
             # if the number of booked slots for that studio on that day is more or equal to # of timeslots, add to fully-booked
             fully_booked_days[key[1]].append(key[0].strftime("%Y-%m-%d")) #appends the formatted date of when studio is fully booked to fully_booked_days
-    return render_template("main/studio_booking.html", studio_spaces = studio_spaces,setup_options = setup_options, time_slots = time_slots, fully_booked_days = fully_booked_days)
+
+    #in case multiple announcements
+    today = datetime.now().strftime("%Y-%m-%d")
+    announcements = db.session.execute(select(Announcement).where(Announcement.start_date <= today, Announcement.end_date >= today)).scalars().all() 
+    return render_template("main/studio_booking.html", studio_spaces = studio_spaces,setup_options = setup_options, 
+                           time_slots = time_slots, fully_booked_days = fully_booked_days, announcements = announcements)
 
 @studio_booking.route('/booked_slots')
 @login_required

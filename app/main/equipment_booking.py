@@ -1,7 +1,7 @@
 from flask import Blueprint, redirect, url_for, session, render_template, jsonify, request, flash
 from flask_login import current_user
 from .extensions import db
-from .models import EquipmentLoan, EquipmentLoanItem, LoanStatus, EquipmentType, EquipmentCategory
+from .models import EquipmentLoan, EquipmentLoanItem, LoanStatus, EquipmentType, EquipmentCategory, Announcement
 from .utils import count_equip_booking_items,equip_type_lookup
 # from utils import count_equip_booking_items,equip_type_lookup
 # from extensions import db
@@ -34,11 +34,13 @@ def data_fetch():
             overdue_loans.append(i)
     
 
-    print(equip_avail_quantity_list)
+    #in case multiple announcements
+    today = datetime.now().strftime("%Y-%m-%d")
+    announcements = db.session.execute(select(Announcement).where(Announcement.start_date <= today, Announcement.end_date >= today)).scalars().all() 
     
     return render_template("main/equipment_booking.html", equipment_types = equipment_types, fully_booked_days = fully_booked_days,
     equipment_category = equipment_category, overdue_loans = overdue_loans, booking_counts = booking_counts,
-    equip_type_lookup = type_lookup)
+    equip_type_lookup = type_lookup, announcements = announcements)
 
 @equip_booking.route('/get_available_equipment', methods=['POST'])
 @login_required

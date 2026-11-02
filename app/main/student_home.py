@@ -1,12 +1,14 @@
 from flask import Blueprint, render_template
 from .extensions import db
-from .models import LoanStatus, EquipmentLoanItem, StudioBooking,StudioBookingStatus, EquipmentLoan
+from .models import LoanStatus, EquipmentLoanItem, StudioBooking,StudioBookingStatus, EquipmentLoan, Announcement
 from .utils import count_equip_booking_items, equip_type_lookup
 # from extensions import db
 # from models import LoanStatus, EquipmentLoanItem, StudioBooking,StudioBookingStatus, EquipmentLoan
 #from utils import count_equip_booking_items, equip_type_lookup
 from flask_login import login_required, current_user
 from sqlalchemy import select
+from datetime import date, datetime
+
 
 student_home = Blueprint('student_home', __name__) #creates flask blueprint student_home
 
@@ -41,6 +43,9 @@ def fetch_data():
         elif i.studio_booking_status == (StudioBookingStatus.FINISHED) or i.studio_booking_status == (StudioBookingStatus.REJECTED):
             studio_past_bookings.append(i)
 
+    #in case multiple announcements
+    today = datetime.now().strftime("%Y-%m-%d")
+    announcements = db.session.execute(select(Announcement).where(Announcement.start_date <= today, Announcement.end_date >= today)).scalars().all() 
         
     for i in equip_bookings:
         if i.status == (LoanStatus.PENDING) or i.status == (LoanStatus.CONFIRMED):
@@ -49,8 +54,10 @@ def fetch_data():
             equip_past_bookings.append(i)
 
 
+    
+
     return render_template("main/student_home.html", loan_items = loan_items, studio_current_bookings = studio_current_bookings, 
                            studio_past_bookings = studio_past_bookings, booking_counts = booking_counts, equip_current_bookings = equip_current_bookings, 
                            equip_past_bookings = equip_past_bookings,
-                           type_lookup = type_lookup)
+                           type_lookup = type_lookup, announcements = announcements)
 #render the html page and pass values into it that html page will show with jinga

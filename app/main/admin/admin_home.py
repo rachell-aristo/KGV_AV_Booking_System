@@ -1,10 +1,10 @@
 from flask import Blueprint, abort, current_app, url_for, session, render_template, jsonify, request, flash
 from flask_mail import Mail, Message
 from ..extensions import db, mail
-from ..models import User, LoanStatus, UserRole, StudioBooking, EquipmentCategory, Asset, EquipmentLoan, StudioSpace, TimeSlot, StudioBookingStatus, EquipmentType, StudioBookingSetupSelection, EquipmentLoanItem, AssetStatus
+from ..models import User, LoanStatus, UserRole, StudioBooking, EquipmentCategory, Asset, EquipmentLoan, StudioSpace, TimeSlot, StudioBookingStatus, EquipmentType, StudioBookingSetupSelection, EquipmentLoanItem, AssetStatus, Announcement
 from ..utils import count_equip_booking_items, equip_type_lookup, studio_type_lookup, slot_type_lookup, studio_setup_lookup
 import os
-from datetime import date
+from datetime import date, datetime
 
 
 from flask_login import login_required, current_user
@@ -65,6 +65,36 @@ def fetch_data():
                             type_to_cat_lookup = type_to_cat_lookup, loan_status = loan_status, today_date = date.today()
                             )
 
+@admin_home.route('/new_announcement', methods=['POST'])
+@login_required
+def new_announcement():
+    if current_user.role != UserRole.ADMIN:
+        abort(403)
+    else:
+        data = request.json
+        title = data.get('title')
+        message = data.get('message')
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+
+        try:
+            new_announcement = Announcement(
+                fk_user_id=current_user.id,
+                title = title,
+                message = message,
+                start_date = start_date,
+                end_date = end_date,
+                created = datetime.now()
+            )
+            db.session.add(new_announcement)
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.exception(e)
+            db.session.rollback()
+            return jsonify({'success': False, 'message': "Failed to update to database"}),500
+        
+        return jsonify({"success":True, "message":None})
+
 
 @admin_home.route('/check_out/<int:booking_id>')
 @login_required
@@ -110,7 +140,6 @@ def equip_return(booking_id):
                 loan_items.append(item)
     return render_template("admin/equip_return.html", booking_id = booking_id, items = loan_items)
 
-#next to do: add equip return function
 #need to display asset code and change conditionals 
 
 @admin_home.route('/fetch_equip_type')
