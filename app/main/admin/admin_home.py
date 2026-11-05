@@ -33,7 +33,7 @@ def fetch_data():
         for booking_id, counter in count_equip_booking_items(equip_bookings).items()}
         type_lookup = equip_type_lookup("table")
 
-        assets = db.session.execute(select(Asset)).scalars().all()
+        assets = db.session.execute(select(Asset).where(Asset.is_active == True)).scalars().all()
         serialized_assets = [item.to_dict() for item in assets]
 
         user_lookup = {} #dict of user ids and corresponding name
@@ -58,12 +58,18 @@ def fetch_data():
             loan_status.append(i.value)
         loan_status.remove("overdue")
 
+        #autocomplete for adding asset modal
+
+        asset_barcodes = db.session.execute(select(Asset.barcode)).scalars().all()
+        asset_names = db.session.execute(select(Asset.name).distinct()).scalars().all()
+        equip_types = db.session.execute(select(EquipmentType.name).distinct()).scalars().all()
+
         return render_template("admin/admin_home.html", s_studio_bookings = serialized_studio_bookings, equip_bookings = equip_bookings, 
                             user_lookup = user_lookup, s_users = serialized_users,
                             loan_items = loan_items, type_lookup = type_lookup, s_equip_bookings = serialized_equip_bookings,
                             studio_lookup = studio_lookup, slot_lookup = slot_lookup, s_assets = serialized_assets,
-                            type_to_cat_lookup = type_to_cat_lookup, loan_status = loan_status, today_date = date.today()
-                            )
+                            type_to_cat_lookup = type_to_cat_lookup, loan_status = loan_status, today_date = date.today(),
+                            asset_barcodes = asset_barcodes, asset_names = asset_names, equip_types = equip_types )
 
 @admin_home.route('/new_announcement', methods=['POST'])
 @login_required
@@ -94,6 +100,8 @@ def new_announcement():
             return jsonify({'success': False, 'message': "Failed to update to database"}),500
         
         return jsonify({"success":True, "message":None})
+
+    
 
 
 @admin_home.route('/check_out/<int:booking_id>')
@@ -292,8 +300,64 @@ def update_loan_status():
                     email_sent = False
                     email_message = email_error
         return jsonify({"success":True, "email_sent":email_sent,"email_message":email_message})
-        
 
+@admin_home.route('/delete_asset', methods=['POST'])
+@login_required
+def delete_asset():
+    if current_user.role != UserRole.ADMIN:
+        abort(403)
+    else:
+        data = request.json
+        asset_id = data.get('asset_id')
+        delete_reason = data.get('delete_reason')
+        equipment_type = db.session.execute(select(Asset.fk_equipment_type_id).where(Asset.id == asset_id)).scalar()
+        try:
+            update_to_inactive = update(Asset).where(Asset.id == asset_id).values(is_active = False, inactive_note = delete_reason)
+            current_quantity = db.session.execute(select(EquipmentType.quantity).where(EquipmentType.id == equipment_type)).scalar()
+            update_equip_quantity = update(EquipmentType).where(EquipmentType.id == equipment_type).values(quantity = current_quantity-1)
+            db.session.execute(update_to_inactive)
+            db.session.execute(update_equip_quantity)
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.exception(e)
+            db.session.rollback()
+            return jsonify({'success': False, 'message': "Failed to update to database"}),500
+        
+        return jsonify({"success":True, "message":None})
+
+
+@admin_home.route('/new_asset', methods=['POST'])
+@login_required
+def new_asset():
+    if current_user.role != UserRole.ADMIN:
+        abort(403)
+    else:
+        data = request.json
+        name = data.get('name')
+        barcode = data.get('barcode')
+        type = data.get('type')
+        descript = data.get('descript')
+
+        if not descript: descript = None
+
+        try:
+            new_asset = Asset(
+                name = name,
+                barcode = barcode.upper(),
+                status = AssetStatus.AVAILABLE,
+                descript = descript,
+                is_active = True,
+                fk_equipment_type_id = db.session.execute(select(EquipmentType.id).where(EquipmentType.name == type)).scalar(),
+                created = datetime.now()
+            )
+            db.session.add(new_asset)
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.exception(e)
+            db.session.rollback()
+            return jsonify({'success': False, 'message': "Failed to update to database"}),500
+        
+        return jsonify({"success":True, "message":None})
 
 def get_student_email(booking_type, booking_id):
     if booking_type not in ("EQUIP", "STUDIO"):

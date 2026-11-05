@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Admin Home{% endblock %}
 {% block content %}
-    <!-- <div id="data-store" data-equip-bookings="{{ s_equip_bookings | tojson }}"></div> -->
+    <div id='data-store'
+    data-asset-barcodes='{{ asset_barcodes | tojson }}'
+    data-asset-names='{{ asset_names | tojson }}'
+    data-equip-types='{{ equip_types | tojson }}'
+    ></div>
 
     <!-- TAB CATEGORIES -->
     <div class="tab-container">
@@ -277,6 +281,8 @@
         <div class = "filter-container">
             <h1>Assets</h1>
             <div class="panel panel-primary filterable">
+                <!-- <button>Import assets</button> -->
+                <button id = "addAsset">Add asset</button>
                 <div><button class="filter-btn">Filter</button></div>
                 <table id = "assetTable">
                     <!-- FILTER BUTTONS ASSET TABLE -->
@@ -293,6 +299,7 @@
                         <th>Name</th>
                         <th>Barcode</th>
                         <th>Status</th>
+                        <th>Action</th>
                     </tr>
                     <!-- ASSET TABLE RECORDS -->
                     <tbody id="asset-table-body">
@@ -307,6 +314,7 @@
                                         {{ record.status.value | upper }}
                                     </span>
                                 </td>
+                                <td><button class = "asset_delete_button">Delete</button></td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -531,6 +539,46 @@
         </div>
     </div>
 
+    <!-- DELETE ASSET MODAL -->
+    <div id = "delete-asset-modal" class = "modal">
+        <div class="modal-content">
+            <span class="close" id="delete-asset-modal-close">&times;</span>
+            <h1>Confirm asset delete</h1>
+            <p>Note: Deleted assets will be marked inactive and will be hidden from view on the dashboard</p>
+            <div class="modal-body">
+                <label for="fname">Reason for deleting:</label>
+                <textarea required type = "text" id = "delete-reason" name = "delete-reason" placeholder = "Enter reason..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button id = "delete-asset-done">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD ASSET MODAL -->
+    <div id = "add-asset-modal" class = "modal">
+        <div class="modal-content">
+            <span class="close" id="add-asset-modal-close">&times;</span>
+            <h1>Add a new asset</h1>
+            <div class="modal-body">
+                <label for="fname">Enter asset name*</label>
+                <input required type = "text" id = "asset-name" name = "asset-name" placeholder = "Eg. Canon 70D"></input>
+                <label for="fname">Enter asset barcode*</label>
+                <input required type = "text" id = "asset-barcode" name = "asset-barcode" placeholder = "Eg. CAM-001"></input> 
+                <label for="fname">Enter asset description (optional)</label>
+                <textarea type = "text" id = "asset-descript" name = "asset-descript" placeholder = "Eg. Canon EF Mount"></textarea>
+                <label for="fname">Select equipment model*</label>
+                <select id ="typeDropdown">
+                    <option disabled selected value> -- select an option -- </option>
+                </select>
+                <p>Add a new model</p>
+            </div>
+            <div class="modal-actions">
+                <button id = "add-asset-done">Done</button>
+            </div>
+        </div>
+    </div>
+
     <!-- REJECT REASON MODAL -->
     <div id = "reject-modal" class = "modal">
         <div class="modal-content modal-sm">
@@ -583,6 +631,7 @@
          </div>
     </div>
     <script>
+        const store = document.getElementById('data-store');
         const equipBookings = {{ s_equip_bookings | tojson | safe }};
         const studioBookings = {{ s_studio_bookings | tojson | safe }};
         const userLookup = {{ user_lookup | tojson | safe }};
@@ -667,7 +716,6 @@
         const announcement_modal = document.getElementById('announcement-modal')
         announcement_button.addEventListener('click',function(){
             announcement_modal.style.display = "flex";
-            console.log('success')
         });
         
         const announcement_submit = document.getElementById('announcement-done')
@@ -712,10 +760,9 @@
 
         // announcement modal close button
         document.getElementById("announcement-modal-close").addEventListener('click', function() {
+            document.getElementById("announcement-message").value = "";
+            document.getElementById("announcement-title").value = "";
             document.getElementById('announcement-modal').style.display = "none";
-            document.getElementById("announcement_message").value = "";
-            document.getElementById("annoncement_title").value = "";
-            //not sure why input not clearing
         });
         
         
@@ -1415,6 +1462,140 @@
             equipRemind.disabled = true;
             equipRemind.textContent = "Loading..."
              //add a count of reminders sent or smth here 
+        });
+
+        //Asset delete function
+
+        const assetDelete = document.querySelectorAll(".asset_delete_button");
+        const assetDeleteModal = document.getElementById("delete-asset-modal")
+        let assetRecId;
+        assetDelete.forEach(function(button){
+            button.addEventListener('click',function(){
+                const assetRow = button.closest(".assetRecord")
+                assetRecId = parseInt(assetRow.dataset.id);
+                assetDeleteModal.style.display = "flex";
+            })
+        });
+
+        const delete_asset_done = document.getElementById('delete-asset-done')
+        delete_asset_done.addEventListener('click',function(){
+            const delete_reason = document.getElementById("delete-reason");
+            
+            if (!delete_reason.value) {
+                alert("Please enter a reason before proceeding.");
+                delete_reason.focus();
+                return; // Prevent the code below from running
+            } else {
+                assetDeleteModal.style.display = "none";
+                fetch('/delete_asset', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        asset_id: assetRecId,
+                        delete_reason: delete_reason.value,
+                    })
+                })
+                .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                        //conditional for this
+                        let deleteRow = document.querySelector('.assetRecord[data-id="' + assetRecId + '"]')
+                        deleteRow.remove()
+                        alert("Asset successfully deleted")
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Something went wrong.")
+                }); 
+            }
+            
+
+        })
+
+        // asset delete modal close button
+        document.getElementById("delete-asset-modal-close").addEventListener('click', function() {
+            document.getElementById("delete-reason").value = "";
+            assetDeleteModal.style.display = "none";
+        });
+
+
+        //ADD ASSET function
+        const asset_barcodes = JSON.parse(store.dataset.assetBarcodes);
+        const asset_names = JSON.parse(store.dataset.assetNames);
+        const equip_types = JSON.parse(store.dataset.equipTypes);
+        const add_asset_button = document.querySelector("#addAsset");
+        const add_asset_modal = document.getElementById('add-asset-modal')
+        const typeDropdown = document.getElementById('typeDropdown')
+        add_asset_button.addEventListener('click',function(){
+            add_asset_modal.style.display = "flex";
+            equip_types.forEach(type => {
+                typeDropdown.add(new Option(String(type),type))
+            })
+        });
+
+        const barcode_input = document.getElementById("asset-barcode")
+        barcode_input.addEventListener('blur',function(){
+            value = barcode_input.value.toUpperCase();
+            if (asset_barcodes.includes(value)){
+                alert("This barcode already exists!")
+                barcode_input.value = ""
+            }
+
+        })
+
+        const add_done = document.getElementById('add-asset-done')
+        add_done.addEventListener('click',function(){
+            const asset_name = document.getElementById('asset-name');
+            const asset_barcode = document.getElementById('asset-barcode');
+            const typeDropdown = document.getElementById('typeDropdown');
+            
+            if (!asset_name.value) {
+                alert("Please enter an asset name before proceeding.");
+                asset_name.focus();
+                return; // Prevent the code below from running
+            } else if (!asset_barcode.value){
+                alert("Please enter an asset barcode before proceeding.");
+                asset_barcode.focus();
+                return; // Prevent the code below from running
+            } else if (!typeDropdown.value){
+                alert("Please select an equipment model before proceeding.");
+                typeDropdown.focus();
+                return; // Prevent the code below from running
+            } else {
+                add_asset_modal.style.display = "none";
+                fetch('/new_asset', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: asset_name.value,
+                        barcode: asset_barcode.value,
+                        descript: document.getElementById("asset-descript").value,
+                        type: typeDropdown.value,
+                    })
+                })
+                .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                        //conditional for this
+                        alert("Asset successfully added!")
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Something went wrong.")
+                }); 
+            }
+        
+
+    })
+
+        document.getElementById("add-asset-modal-close").addEventListener('click', function() {
+            // document.getElementById("announcement-message").value = "";
+            // document.getElementById("announcement-title").value = "";
+            add_asset_modal.style.display = "none";
         });
     </script>
 {% endblock %}

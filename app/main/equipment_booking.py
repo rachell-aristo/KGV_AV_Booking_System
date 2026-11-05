@@ -22,8 +22,6 @@ def data_fetch():
     equipment_category = db.session.execute(select(EquipmentCategory)).scalars().all()
     bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() #Sets all equipment bookings to var
     fully_booked_days = {} #structure of fully_booked is a dict where keys = studio_id and value = array of dates where it's fully booked for that studio
-    equipment_id_list = []
-    equip_avail_quantity_list = []
     equip_bookings = db.session.execute(select(EquipmentLoan).where(EquipmentLoan.fk_user_id == current_user.id)).scalars().all() 
     booking_counts = count_equip_booking_items(equip_bookings)
     overdue_loans = []
@@ -59,13 +57,15 @@ def get_available_equipment():
         else:
             unavail = 0
             stmt = db.session.execute(select(EquipmentLoan)
-            .where(EquipmentLoan.status.in_([LoanStatus.CONFIRMED, LoanStatus.PENDING])))
+            .where(EquipmentLoan.status.not_in([LoanStatus.REJECTED, LoanStatus.FINISHED,LoanStatus.CANCELED])))
             for loan in stmt.scalars().all():
                 for loanitem in db.session.execute(select(EquipmentLoanItem)
                 .where(EquipmentLoanItem.fk_loan_id == loan.id, 
                 EquipmentLoanItem.fk_equipment_type_id == item.id)).scalars().all():
                     if loan.loan_end_date >= new_loan_start_date and newloan_end_date >= loan.loan_start_date:
                         unavail += 1 #count up all assets in this category that are unavaliable 
+                    elif loan.status == LoanStatus.OVERDUE:
+                        unavail += 1 #overdue assets are still unavail
             if ((item.quantity)-unavail) > item.loan_limit_quantity:
                 updated_quantity = item.loan_limit_quantity
             else:

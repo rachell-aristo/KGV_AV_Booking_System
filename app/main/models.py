@@ -130,6 +130,7 @@ class Asset(db.Model):
     name = db.Column(db.String(255), nullable = False)
     barcode = db.Column(db.String(255), nullable = False, unique = True)
     status = db.Column(db.Enum(AssetStatus), nullable=False)
+    inactive_note = db.Column(db.String(1000), nullable = True)
     descript = db.Column(db.String(1000), nullable = True)
     is_active = db.Column(db.Boolean, nullable = False )
     fk_equipment_type_id = db.Column(ForeignKey("equipment_type.id"), nullable=False)
