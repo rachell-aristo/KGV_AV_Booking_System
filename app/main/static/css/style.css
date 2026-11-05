@@ -1175,3 +1175,27 @@ tr.scanned td:first-child {
   background: none;
   color: var(--ink);
 }
+
+/* ------------------- Admin dashboard: button layout fixes ------------------- */
+ 
+/* Dashboard: "Create an announcement" shares a row with the "Today's bookings"
+   heading. The button comes before the h1 in the HTML, so floating it right
+   lets the heading sit on the same line. The small negative margin centres
+   the (slightly taller) button against the heading text. */
+#dashboard #announcement_button {
+  float: right;
+  margin: -0.2rem 0 0 1rem;
+}
+ 
+/* Assets tab: "Add asset" and "Filter" sit side by side instead of stacking.
+   The Filter button is wrapped in a block-level <div>, which forces it onto
+   its own line, so that wrapper is made inline-block. */
+#assets .filterable > div:first-of-type {
+  display: inline-block;
+  vertical-align: middle;
+}
+ 
+#assets #addAsset {
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
