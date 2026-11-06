@@ -46,7 +46,7 @@
                     <!-- EQUIPMENT TABLE RECORDS -->
                     <tbody id="equip-table-body">
                         {% for record in equip_bookings %}
-                            {% if record.loan_start_date == today_date and (record.status.value | upper == "PENDING" or record.status.value | upper == "CONFIRMED") %}
+                            {% if (record.loan_start_date == today_date or record.loan_end_date == today_date) and (record.status.value | upper == "PENDING" or record.status.value | upper == "CONFIRMED" or record.status.value | upper == "CHECKEDOUT") %}
                                 <tr class = "equipRecord" data-id = "{{record.id}}">
                                     <td>{{record.id}}</td>
                                     <td>{{user_lookup.get(record.fk_user_id, 'Unknown User')}}</td>
@@ -614,15 +614,17 @@
                     <th>Name</th>
                     <th>Role</th>
                     <th>Year Group</th>
+                    <th>Tutor Group</th>
                 </tr>
                 <tbody id="user-table-body">
                     {% for user in s_users %}
                         <tr class = "user" data-id = "{{user.id}}">
                             <td>{{user.id}}</td>
                             <td>{{user.email}}</td>
-                            <td>{{user.name}}</td>
+                            <td>{{user.name[:-7]}}</td>
                             <td>{{user.role.value | upper}}</td>
                             <td>{{user.year_group}}</td>
+                            <td>{{user.name[-4:-1]}}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
